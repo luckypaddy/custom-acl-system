@@ -9,11 +9,13 @@ dependencies {
     implementation(kotlin("stdlib-jdk8"))
     implementation(kotlin("reflect"))
     implementation( "org.jetbrains.exposed:exposed-core")
+    implementation( "org.jetbrains.exposed:exposed-dao")
     implementation( "org.jetbrains.exposed:exposed-jdbc")
     implementation( "com.zaxxer:HikariCP")
+    implementation("io.github.microutils:kotlin-logging")
     implementation( "ch.qos.logback:logback-classic")
 //    implementation("com.natpryce:konfig")
-//    runtimeOnly("org.postgresql:postgresql")
+    implementation("org.postgresql:postgresql")
 
 
     testCompileOnly("org.junit.jupiter:junit-jupiter-api")

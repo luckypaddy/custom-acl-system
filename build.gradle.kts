@@ -26,6 +26,7 @@ configure(subprojects) {
             }
             dependencySet("org.jetbrains.exposed:$exposedVersion") {
                 entry("exposed-core")
+                entry("exposed-dao")
                 entry("exposed-jdbc")
             }
             dependencySet("org.junit.jupiter:$junitVersion") {
@@ -36,6 +37,7 @@ configure(subprojects) {
             dependency("ch.qos.logback:logback-classic:1.2.3")
             dependency("com.natpryce:konfig:1.6.10.0")
             dependency("org.postgresql:postgresql:42.2.12")
+            dependency("io.github.microutils:kotlin-logging:1.7.9")
         }
     }
 }

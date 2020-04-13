@@ -1,6 +1,6 @@
 package com.custom.acl.core.user
 
-import com.custom.acl.core.GrantedRole
+import com.custom.acl.core.role.GrantedRole
 
 /**
  * Provides minimal needed information of actor in system

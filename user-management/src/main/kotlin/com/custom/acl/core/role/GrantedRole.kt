@@ -1,4 +1,4 @@
-package com.custom.acl.core
+package com.custom.acl.core.role
 
 /**
  * Represent role granted to user in system

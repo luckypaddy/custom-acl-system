@@ -1,6 +1,6 @@
 package com.custom.acl.core.role.hierarchy
 
-import com.custom.acl.core.GrantedRole
+import com.custom.acl.core.role.GrantedRole
 
 /**
  * Basis interface of a role hierarchy.

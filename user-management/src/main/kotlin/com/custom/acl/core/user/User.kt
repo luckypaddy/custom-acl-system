@@ -1,6 +1,6 @@
 package com.custom.acl.core.user
 
-import com.custom.acl.core.GrantedRole
+import com.custom.acl.core.role.GrantedRole
 
 
 /**
@@ -10,7 +10,7 @@ import com.custom.acl.core.GrantedRole
  * @property password password
  * @property roles granted roles
  */
-class User(
+data class User(
     private val username: String,
     private val password: String,
     private val roles: Collection<GrantedRole>
