@@ -12,8 +12,8 @@ dependencies {
     implementation( "org.jetbrains.exposed:exposed-jdbc")
     implementation( "com.zaxxer:HikariCP")
     implementation( "ch.qos.logback:logback-classic")
-    implementation("com.natpryce:konfig")
-    implementation("org.postgresql:postgresql")
+//    implementation("com.natpryce:konfig")
+//    runtimeOnly("org.postgresql:postgresql")
 
 
     testCompileOnly("org.junit.jupiter:junit-jupiter-api")
