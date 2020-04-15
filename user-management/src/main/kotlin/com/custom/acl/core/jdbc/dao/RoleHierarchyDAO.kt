@@ -8,7 +8,7 @@ import java.io.Closeable
  * DAO Interface for roles with hierarchy
  *
  */
-interface HierarchicalRoleDAO: RoleHierarchy, Closeable {
+interface RoleHierarchyDAO: RoleHierarchy, Closeable {
     /**
      * Create ROLE with parent relation
      *
@@ -25,6 +25,13 @@ interface HierarchicalRoleDAO: RoleHierarchy, Closeable {
      */
     fun delete(role: GrantedRole)
 
+    /**
+     * Check if role with given identity is present in hierarchy and return it
+     *
+     * @param identity identity of role to be found
+     * @return [GrantedRole] or null if not present
+     */
+    fun findByIdentity(identity: String): GrantedRole?
     /**
      * Find basic roles in hierarchy (with no parent)
      *

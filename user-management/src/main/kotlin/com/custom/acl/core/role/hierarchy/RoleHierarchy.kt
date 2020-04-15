@@ -13,5 +13,5 @@ interface RoleHierarchy {
      * @param roles list of assigned roles
      * @return List of all reachable roles for granted roles
      */
-    fun getEffectiveRoles(roles: Collection<GrantedRole>): Collection<GrantedRole>
+    fun effectiveRoles(roles: Collection<GrantedRole>): Collection<GrantedRole>
 }

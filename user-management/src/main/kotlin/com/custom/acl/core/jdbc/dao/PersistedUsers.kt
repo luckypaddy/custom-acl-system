@@ -1,18 +1,39 @@
 package com.custom.acl.core.jdbc.dao
 
-import org.jetbrains.exposed.dao.IntEntity
-import org.jetbrains.exposed.dao.IntEntityClass
+import com.custom.acl.core.role.Role
+import com.custom.acl.core.user.User
+import org.jetbrains.exposed.dao.UUIDEntity
+import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.dao.id.IntIdTable
+import org.jetbrains.exposed.dao.id.UUIDTable
+import java.util.*
 
-internal object PersistedUsers : IntIdTable(name = "users") {
+/**
+ * Table for storing user related information
+ *
+ */
+object PersistedUsers : UUIDTable(name = "users") {
     val username = varchar("user_name", 32).uniqueIndex()
     val passwordHash = varchar("password_hash", 256)
 }
 
-internal class PersistedUser(id: EntityID<Int>): IntEntity(id) {
-    companion object : IntEntityClass<PersistedUser>(PersistedUsers)
-    val username by PersistedUsers.username
-    val password by PersistedUsers.passwordHash
-    val roles by HierarchicalRole via UserRoles
+/**
+ * Entity mapped on [PersistedUsers] table
+ *
+ */
+class PersistedUser(id: EntityID<UUID>): UUIDEntity(id) {
+    companion object : UUIDEntityClass<PersistedUser>(PersistedUsers)
+    var username by PersistedUsers.username
+    var passwordHash by PersistedUsers.passwordHash
+    var roles by HierarchicalRole via UserRoles
 }
+
+/**
+ * Function to convert [PersistedUser] to [User]
+ *
+ */
+fun PersistedUser.toUser() = User(
+    username = username,
+    passwordHash = passwordHash,
+    roles = roles.map { hierarchicalRole -> Role(hierarchicalRole.identity) }
+)

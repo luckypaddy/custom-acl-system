@@ -1,19 +1,28 @@
 package com.custom.acl.core.jdbc.dao
 
-import org.jetbrains.exposed.dao.IntEntity
-import org.jetbrains.exposed.dao.IntEntityClass
+import org.jetbrains.exposed.dao.UUIDEntity
+import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.dao.id.IntIdTable
+import org.jetbrains.exposed.dao.id.UUIDTable
+import java.util.*
 
-internal object HierarchicalRoles : IntIdTable(name = "roles") {
-    val identity = varchar("identity", 32)
-    val parentId = integer("parent_id").nullable()
+/**
+ * Roles hierarchy table
+ */
+object HierarchicalRoles : UUIDTable(name = "roles") {
+    val identity = varchar("identity", 32).uniqueIndex()
+    val parentId = uuid("parent_id").nullable()
     val left = integer("lft")
     val right = integer("rgt")
 }
 
-internal class HierarchicalRole(id: EntityID<Int>): IntEntity(id) {
-    companion object : IntEntityClass<HierarchicalRole>(HierarchicalRoles)
+/**
+ * Entity mapped on [HierarchicalRoles] table
+ *
+ */
+class HierarchicalRole(id: EntityID<UUID>): UUIDEntity(id) {
+    companion object : UUIDEntityClass<HierarchicalRole>(HierarchicalRoles)
+    val parentId by HierarchicalRoles.parentId
     val identity by HierarchicalRoles.identity
 
 }

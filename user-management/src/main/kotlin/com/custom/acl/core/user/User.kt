@@ -4,22 +4,14 @@ import com.custom.acl.core.role.GrantedRole
 
 
 /**
- * Basic implementation of [UserInfo]
+ * Basic implementation of user
  *
  * @property username name
- * @property password password
+ * @property passwordHash password
  * @property roles granted roles
  */
 data class User(
-    private val username: String,
-    private val password: String,
-    private val roles: Collection<GrantedRole>
-): UserInfo {
-
-    override fun getUsername(): String = username
-
-    override fun getPassword(): String = password
-
-    override fun getRoles(): Collection<GrantedRole> = roles
-
-}
+    val username: String,
+    val passwordHash: String,
+    val roles: Collection<GrantedRole>
+)

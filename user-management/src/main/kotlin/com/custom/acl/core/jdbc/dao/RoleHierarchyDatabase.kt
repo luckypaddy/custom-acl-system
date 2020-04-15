@@ -15,8 +15,8 @@ private val logger = KotlinLogging.logger {}
  *
  * @property db
  */
-class DatabaseHierarchicalRoleDAO(private val db: Database = Database.connect(HikariDataSource())) :
-    HierarchicalRoleDAO {
+class RoleHierarchyDatabase(private val db: Database = Database.connect(HikariDataSource())) :
+    RoleHierarchyDAO {
     override fun create(role: GrantedRole, parentRole: GrantedRole?) =
         transaction(Connection.TRANSACTION_SERIALIZABLE, 3, db) {
             val (newLeft, pId) = when {
@@ -123,6 +123,13 @@ class DatabaseHierarchicalRoleDAO(private val db: Database = Database.connect(Hi
         return@transaction
     }
 
+    override fun findByIdentity(identity: String): GrantedRole? = transaction(db) {
+        HierarchicalRole
+            .find { HierarchicalRoles.identity eq identity }
+            .map { role -> Role(role.identity) }
+            .singleOrNull()
+    }
+
     override fun findBasicRoles(): Collection<GrantedRole> = transaction(db) {
         HierarchicalRole
             .find { HierarchicalRoles.parentId.isNull() }
@@ -137,7 +144,7 @@ class DatabaseHierarchicalRoleDAO(private val db: Database = Database.connect(Hi
     }
 
 
-    override fun getEffectiveRoles(roles: Collection<GrantedRole>): Collection<GrantedRole> = transaction {
+    override fun effectiveRoles(roles: Collection<GrantedRole>): Collection<GrantedRole> = transaction {
         val identities = roles.map(GrantedRole::getRoleIdentity)
         val node = HierarchicalRoles.alias("node")
 
