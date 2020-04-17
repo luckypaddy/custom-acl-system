@@ -1,17 +1,22 @@
 package com.custom.acl.core.jdbc.utils
 
-import org.jetbrains.exposed.sql.transactions.TransactionManager
-import java.sql.ResultSet
+import com.zaxxer.hikari.HikariConfig
+import com.zaxxer.hikari.HikariDataSource
+import org.jetbrains.exposed.sql.Database
 
+/**
+ * Wrapper for setting up connection to DB with Hikari CP
+ */
 object DatabaseFactory {
-}
 
-fun <T:Any> String.execAndMap(transform : (ResultSet) -> T) : List<T> {
-    val result = arrayListOf<T>()
-    TransactionManager.current().exec(this) { rs ->
-        while (rs.next()) {
-            result += transform(rs)
-        }
+    /**
+     * Connect to DB with Hikari CP
+     *
+     * @param config [HikariConfig] configuration of db connection
+     * @return [Database] with [HikariDataSource]
+     */
+    fun connectToDb(config: HikariConfig): Database {
+        config.validate()
+        return Database.connect(HikariDataSource(config))
     }
-    return result
 }

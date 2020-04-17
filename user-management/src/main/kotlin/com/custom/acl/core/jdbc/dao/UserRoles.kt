@@ -6,7 +6,7 @@ import org.jetbrains.exposed.sql.Table
 /**
  * Intermediate table to store the references between [HierarchicalRoles] and [PersistedUsers]
  */
-internal object UserRoles : Table(name = "user_role") {
+object UserRoles : Table(name = "user_role") {
     val user = reference("user", PersistedUsers, CASCADE, CASCADE)
     val role = reference("role", HierarchicalRoles)
 }

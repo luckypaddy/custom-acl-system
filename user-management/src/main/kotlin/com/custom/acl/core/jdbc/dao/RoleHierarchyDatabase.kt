@@ -148,7 +148,7 @@ class RoleHierarchyDatabase(private val db: Database = Database.connect(HikariDa
         val identities = roles.map(GrantedRole::getRoleIdentity)
         val node = HierarchicalRoles.alias("node")
 
-        Join(node).join(HierarchicalRoles, JoinType.LEFT) { node[HierarchicalRoles.identity] inList identities }
+        Join(node).join(HierarchicalRoles, JoinType.INNER) { node[HierarchicalRoles.identity] inList identities }
             .slice(HierarchicalRoles.identity, HierarchicalRoles.left)
             .select {
                 node[HierarchicalRoles.left] greaterEq HierarchicalRoles.left and
@@ -158,6 +158,30 @@ class RoleHierarchyDatabase(private val db: Database = Database.connect(HikariDa
             .orderBy(HierarchicalRoles.left)
             .map { row ->
                 Role(row[HierarchicalRoles.identity])
+            }
+    }
+
+    @Suppress("SENSELESS_NULL_IN_WHEN")
+    override fun roleHierarchy(): Map<GrantedRole, GrantedRole?> = transaction(db) {
+        val parent = HierarchicalRoles.alias("parent")
+        return@transaction Join(HierarchicalRoles)
+            .join(parent, JoinType.LEFT) {
+                HierarchicalRoles.parentId eq parent[HierarchicalRoles.id]
+            }
+            .slice(HierarchicalRoles.identity, HierarchicalRoles.left, parent[HierarchicalRoles.identity])
+            .selectAll()
+            .groupBy(
+                HierarchicalRoles.identity,
+                HierarchicalRoles.left,
+                parent[HierarchicalRoles.identity]
+            )
+            .orderBy(HierarchicalRoles.left)
+            .associate {
+                Role(it[HierarchicalRoles.identity]) to
+                        when (val parentIdentity = it[parent[HierarchicalRoles.identity]]) {
+                            null -> null
+                            else -> Role(parentIdentity)
+                        }
             }
     }
 

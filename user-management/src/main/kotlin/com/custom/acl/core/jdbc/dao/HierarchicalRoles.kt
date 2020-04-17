@@ -4,6 +4,7 @@ import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.UUIDTable
+import org.jetbrains.exposed.sql.upperCase
 import java.util.*
 
 /**
@@ -20,7 +21,7 @@ object HierarchicalRoles : UUIDTable(name = "roles") {
  * Entity mapped on [HierarchicalRoles] table
  *
  */
-class HierarchicalRole(id: EntityID<UUID>): UUIDEntity(id) {
+internal class HierarchicalRole(id: EntityID<UUID>): UUIDEntity(id) {
     companion object : UUIDEntityClass<HierarchicalRole>(HierarchicalRoles)
     val parentId by HierarchicalRoles.parentId
     val identity by HierarchicalRoles.identity

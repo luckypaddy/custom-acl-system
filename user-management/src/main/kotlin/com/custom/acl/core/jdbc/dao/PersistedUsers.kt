@@ -21,7 +21,7 @@ object PersistedUsers : UUIDTable(name = "users") {
  * Entity mapped on [PersistedUsers] table
  *
  */
-class PersistedUser(id: EntityID<UUID>): UUIDEntity(id) {
+internal class PersistedUser(id: EntityID<UUID>): UUIDEntity(id) {
     companion object : UUIDEntityClass<PersistedUser>(PersistedUsers)
     var username by PersistedUsers.username
     var passwordHash by PersistedUsers.passwordHash
@@ -32,7 +32,7 @@ class PersistedUser(id: EntityID<UUID>): UUIDEntity(id) {
  * Function to convert [PersistedUser] to [User]
  *
  */
-fun PersistedUser.toUser() = User(
+internal fun PersistedUser.toUser() = User(
     username = username,
     passwordHash = passwordHash,
     roles = roles.map { hierarchicalRole -> Role(hierarchicalRole.identity) }

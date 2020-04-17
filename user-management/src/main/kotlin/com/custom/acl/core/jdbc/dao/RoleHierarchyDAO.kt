@@ -46,4 +46,8 @@ interface RoleHierarchyDAO: RoleHierarchy, Closeable {
      */
     fun findAll(): Collection<GrantedRole>
 
+    /**
+     *
+     */
+    fun roleHierarchy(): Map<GrantedRole, GrantedRole?>
 }

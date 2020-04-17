@@ -15,10 +15,10 @@ dependencies {
     implementation("io.github.microutils:kotlin-logging")
     implementation( "ch.qos.logback:logback-classic")
 //    implementation("com.natpryce:konfig")
-    implementation("org.postgresql:postgresql")
+//    implementation("org.postgresql:postgresql")
 
-
-    testCompileOnly("org.junit.jupiter:junit-jupiter-api")
+    testImplementation("com.h2database", "h2", "1.4.200")
+    testImplementation("org.junit.jupiter:junit-jupiter-api")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
 }
 
@@ -29,4 +29,7 @@ tasks {
     compileTestKotlin {
         kotlinOptions.jvmTarget = "1.8"
     }
+}
+tasks.withType<Test> {
+    useJUnitPlatform()
 }
