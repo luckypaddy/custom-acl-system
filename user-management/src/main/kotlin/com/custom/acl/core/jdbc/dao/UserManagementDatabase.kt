@@ -10,7 +10,6 @@ import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
-import kotlin.NoSuchElementException
 
 private val logger = KotlinLogging.logger {}
 
@@ -40,7 +39,7 @@ class UserManagementDatabase(
         val result = HierarchicalRole.find { HierarchicalRoles.identity inList identites }
         if (result.empty()) {
             logger.error { "There are no roles with given identities: $identites" }
-            throw NoSuchElementException("There are no roles with given identities: $identites")
+            throw IllegalArgumentException("There are no roles with given identities: $identites")
         }
         return result
     }
@@ -96,5 +95,8 @@ class UserManagementDatabase(
         }
         persistedUser.passwordHash = newPasswordHash
         return@transaction persistedUser.toUser()
+    }
+
+    override fun close() {
     }
 }

@@ -31,5 +31,8 @@ tasks {
     }
 }
 tasks.withType<Test> {
+    testLogging {
+        showStandardStreams = true
+    }
     useJUnitPlatform()
 }

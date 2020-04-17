@@ -32,12 +32,6 @@ interface RoleHierarchyDAO: RoleHierarchy, Closeable {
      * @return [GrantedRole] or null if not present
      */
     fun findByIdentity(identity: String): GrantedRole?
-    /**
-     * Find basic roles in hierarchy (with no parent)
-     *
-     * @return
-     */
-    fun findBasicRoles(): Collection<GrantedRole>
 
     /**
      * Find all roles
@@ -47,7 +41,8 @@ interface RoleHierarchyDAO: RoleHierarchy, Closeable {
     fun findAll(): Collection<GrantedRole>
 
     /**
+     * Full graph of member_of relations in current role hierarchy
      *
      */
-    fun roleHierarchy(): Map<GrantedRole, GrantedRole?>
+    fun hierarchy(): Map<GrantedRole, GrantedRole?>
 }

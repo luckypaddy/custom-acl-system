@@ -22,6 +22,7 @@ class RoleHierarchyDatabase(private val db: Database = Database.connect(HikariDa
             val (newLeft, pId) = when {
                 parentRole != null -> {
                     val identity = parentRole.getRoleIdentity()
+                    logger.info { "Searching for parent role:$identity" }
                     val parent = HierarchicalRoles
                         .slice(HierarchicalRoles.id, HierarchicalRoles.right)
                         .select { HierarchicalRoles.identity eq identity }
@@ -33,24 +34,28 @@ class RoleHierarchyDatabase(private val db: Database = Database.connect(HikariDa
                     parent[HierarchicalRoles.right] to parent[HierarchicalRoles.id].value
                 }
                 else -> {
+                    logger.info {"Searching for max right border of nested sets"}
                     val max = HierarchicalRoles.right.max()
                     val maxValue = HierarchicalRoles.slice(max).selectAll().map { it[max] }.single() ?: 0
                     (maxValue + 1) to null
                 }
             }
 
+            logger.info {"Update right borders of nested sets"}
             HierarchicalRoles.update({ HierarchicalRoles.right greaterEq newLeft }) {
                 with(SqlExpressionBuilder) {
                     it[right] = right + 2
                 }
             }
 
+            logger.info {"Update left borders of nested sets"}
             HierarchicalRoles.update({ HierarchicalRoles.left greater newLeft }) {
                 with(SqlExpressionBuilder) {
                     it[left] = left + 2
                 }
             }
 
+            logger.info {"Creating new hierarchical role with identity: ${role.getRoleIdentity()}"}
             val entityID = HierarchicalRoles.insertAndGetId {
                 it[parentId] = pId
                 it[identity] = role.getRoleIdentity()
@@ -63,6 +68,7 @@ class RoleHierarchyDatabase(private val db: Database = Database.connect(HikariDa
 
     override fun delete(role: GrantedRole) = transaction(Connection.TRANSACTION_SERIALIZABLE, 3, db) {
         val identity = role.getRoleIdentity()
+        logger.info {"Searching for role with identity: $identity"}
         val node = HierarchicalRoles
             .slice(HierarchicalRoles.left, HierarchicalRoles.right, HierarchicalRoles.parentId)
             .select { HierarchicalRoles.identity eq identity }
@@ -76,11 +82,12 @@ class RoleHierarchyDatabase(private val db: Database = Database.connect(HikariDa
         val newLeft = node[HierarchicalRoles.left]
         val newRight = node[HierarchicalRoles.right]
         val ancestor = node[HierarchicalRoles.parentId]
-        val hasLeafs = (newRight - newLeft) == 1
+        val noLeafs = (newRight - newLeft) == 1
         val width = newRight - newLeft + 1
 
         when {
-            hasLeafs -> {
+            noLeafs -> {
+                logger.info { "Deleting hierarchy node without descendants" }
                 HierarchicalRoles.deleteWhere { HierarchicalRoles.identity eq identity }
 
                 HierarchicalRoles.update({ HierarchicalRoles.right greater newRight }) {
@@ -96,6 +103,7 @@ class RoleHierarchyDatabase(private val db: Database = Database.connect(HikariDa
                 }
             }
             else -> {
+                logger.info { "Deleting hierarchy node without descendants" }
                 HierarchicalRoles.deleteWhere { HierarchicalRoles.identity eq identity }
 
                 HierarchicalRoles.update({ HierarchicalRoles.left.between(newLeft, newRight) }) {
@@ -124,30 +132,25 @@ class RoleHierarchyDatabase(private val db: Database = Database.connect(HikariDa
     }
 
     override fun findByIdentity(identity: String): GrantedRole? = transaction(db) {
+        logger.info {"Searching for role with identity: $identity"}
         HierarchicalRole
             .find { HierarchicalRoles.identity eq identity }
             .map { role -> Role(role.identity) }
             .singleOrNull()
     }
 
-    override fun findBasicRoles(): Collection<GrantedRole> = transaction(db) {
-        HierarchicalRole
-            .find { HierarchicalRoles.parentId.isNull() }
-            .map { role -> Role(role.identity) }
-
-    }
-
     override fun findAll(): Collection<GrantedRole> = transaction(db) {
+        logger.info {"Searching for all roles"}
         HierarchicalRole.all()
             .sortedBy { HierarchicalRoles.left }
             .map { role -> Role(role.identity) }
     }
 
-
     override fun effectiveRoles(roles: Collection<GrantedRole>): Collection<GrantedRole> = transaction {
         val identities = roles.map(GrantedRole::getRoleIdentity)
         val node = HierarchicalRoles.alias("node")
 
+        logger.info {"Searching for effective roles for: $identities"}
         Join(node).join(HierarchicalRoles, JoinType.INNER) { node[HierarchicalRoles.identity] inList identities }
             .slice(HierarchicalRoles.identity, HierarchicalRoles.left)
             .select {
@@ -162,7 +165,8 @@ class RoleHierarchyDatabase(private val db: Database = Database.connect(HikariDa
     }
 
     @Suppress("SENSELESS_NULL_IN_WHEN")
-    override fun roleHierarchy(): Map<GrantedRole, GrantedRole?> = transaction(db) {
+    override fun hierarchy(): Map<GrantedRole, GrantedRole?> = transaction(db) {
+        logger.info {"Searching for role hierarchy"}
         val parent = HierarchicalRoles.alias("parent")
         return@transaction Join(HierarchicalRoles)
             .join(parent, JoinType.LEFT) {

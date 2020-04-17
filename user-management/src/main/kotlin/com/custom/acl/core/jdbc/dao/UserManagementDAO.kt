@@ -2,12 +2,13 @@ package com.custom.acl.core.jdbc.dao
 
 import com.custom.acl.core.role.GrantedRole
 import com.custom.acl.core.user.User
+import java.io.Closeable
 
 /**
  * DAO interface for operations with users
  *
  */
-interface UserManagementDAO {
+interface UserManagementDAO: Closeable {
 
     /**
      * Assign set of roles to user
