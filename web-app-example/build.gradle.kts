@@ -27,3 +27,7 @@ tasks {
         kotlinOptions.jvmTarget = "1.8"
     }
 }
+
+application {
+    mainClassName = "com.custom.acl.web.demo.MainKt"
+}
