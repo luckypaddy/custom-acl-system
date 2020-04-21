@@ -2,6 +2,7 @@ val kotlinVersion: String by project
 val ktorVersion: String by project
 val exposedVersion: String by project
 val junitVersion: String by project
+val kodeinVersion: String by project
 
 group = "com.custom.auth"
 version = "1.0-SNAPSHOT"
@@ -22,12 +23,19 @@ configure(subprojects) {
         dependencies {
             dependencySet("io.ktor:$ktorVersion") {
                 entry("ktor-server-netty")
-                entry("ktor-jackson")
+                entry("ktor-auth")
+                entry("ktor-locations")
+                entry("ktor-server-sessions")
+                entry("ktor-serialization")
             }
             dependencySet("org.jetbrains.exposed:$exposedVersion") {
                 entry("exposed-core")
                 entry("exposed-dao")
                 entry("exposed-jdbc")
+            }
+            dependencySet("org.kodein.di:$kodeinVersion") {
+                entry("kodein-di-framework-ktor-server-controller-jvm")
+                entry("kodein-di-generic-jvm")
             }
             dependencySet("org.junit.jupiter:$junitVersion") {
                 entry("junit-jupiter-api")
