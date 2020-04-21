@@ -132,34 +132,6 @@ internal class RoleHierarchyDatabaseTest : DatabaseTestsBase() {
     }
 
     @Test
-    fun `get all roles without any roles`() {
-        withTables(HierarchicalRoles) {
-            assert(roleDao.findAll().isEmpty()) { "Hierarchy should be empty" }
-        }
-    }
-
-    @Test
-    fun `get all roles in `() {
-        withTables(HierarchicalRoles) {
-            createBasicRoles()
-
-            val foo = Role("FOO")
-            val bar = Role("BAR")
-
-            roleDao.create(foo, null)
-            roleDao.create(bar, foo)
-
-            val all = roleDao.findAll()
-            assert(all.containsAll(listOf(USER_ROLE, REVIEWER_ROLE, ADMIN_ROLE, foo, bar))) {
-                "Effective roles should contain: USER REVIEWER ADMIN FOO, BAR"
-            }
-            assert(all.size == 5) {
-                "Effective roles should contain only 5 roles"
-            }
-        }
-    }
-
-    @Test
     fun `delete existing role from hierarchy`() {
         withTables(HierarchicalRoles) {
             createBasicRoles()
@@ -177,20 +149,6 @@ internal class RoleHierarchyDatabaseTest : DatabaseTestsBase() {
 
             assert(adminRoleInDB.parentId == userRoleInDB.id.value) { "ADMIN role should be member_of USER role" }
             assert(adminRoleInDB.identity == ADMIN_ROLE.getRoleIdentity()) { "Identity should be ADMIN" }
-
-            //---
-/*
-            val all = HierarchicalRoles.selectAll().orderBy(HierarchicalRoles.left)
-            assert(all.count() == 2L)
-            val userRoleInDB = all.elementAt(0)
-            val adminRoleInDB = all.elementAt(1)
-
-            assert(userRoleInDB[HierarchicalRoles.parentId] == null) { "User role shouldn't have any member_of relations" }
-            assert(userRoleInDB[HierarchicalRoles.identity] == USER_ROLE.getRoleIdentity()) { "Identity should be USER" }
-
-            assert(userRoleInDB[HierarchicalRoles.id].value == adminRoleInDB[HierarchicalRoles.parentId]) { "ADMIN role should be member_of USER role" }
-            assert(adminRoleInDB[HierarchicalRoles.identity] == ADMIN_ROLE.getRoleIdentity()) { "Identity should be ADMIN" }
-*/
         }
     }
 

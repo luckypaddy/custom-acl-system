@@ -139,13 +139,6 @@ class RoleHierarchyDatabase(private val db: Database = Database.connect(HikariDa
             .singleOrNull()
     }
 
-    override fun findAll(): Collection<GrantedRole> = transaction(db) {
-        logger.info {"Searching for all roles"}
-        HierarchicalRole.all()
-            .sortedBy { HierarchicalRoles.left }
-            .map { role -> Role(role.identity) }
-    }
-
     override fun effectiveRoles(roles: Collection<GrantedRole>): Collection<GrantedRole> = transaction {
         val identities = roles.map(GrantedRole::getRoleIdentity)
         val node = HierarchicalRoles.alias("node")

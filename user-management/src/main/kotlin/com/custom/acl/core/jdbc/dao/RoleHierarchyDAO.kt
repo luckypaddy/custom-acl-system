@@ -34,13 +34,6 @@ interface RoleHierarchyDAO: RoleHierarchy, Closeable {
     fun findByIdentity(identity: String): GrantedRole?
 
     /**
-     * Find all roles
-     *
-     * @return
-     */
-    fun findAll(): Collection<GrantedRole>
-
-    /**
      * Full graph of member_of relations in current role hierarchy
      *
      */

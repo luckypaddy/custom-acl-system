@@ -8,6 +8,8 @@ group = "com.custom.auth"
 version = "1.0-SNAPSHOT"
 
 plugins {
+    kotlin("jvm") apply false
+    kotlin("plugin.serialization") apply false
     id("io.spring.dependency-management")
 }
 
