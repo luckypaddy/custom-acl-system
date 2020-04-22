@@ -6,6 +6,7 @@ import com.zaxxer.hikari.HikariDataSource
 import mu.KotlinLogging
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.sql.transactions.transactionManager
 import java.sql.Connection
 
 private val logger = KotlinLogging.logger {}

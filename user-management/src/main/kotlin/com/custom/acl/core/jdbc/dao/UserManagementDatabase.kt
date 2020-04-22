@@ -98,5 +98,6 @@ class UserManagementDatabase(
     }
 
     override fun close() {
+        db.connector().close()
     }
 }

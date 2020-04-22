@@ -1,5 +1,6 @@
 package com.custom.acl.web.demo
 
+import com.custom.acl.core.jdbc.dao.RoleHierarchyDAO
 import com.custom.acl.core.jdbc.dao.UserManagementDAO
 import com.custom.acl.core.role.GrantedRole
 import com.custom.acl.web.demo.model.UserCredentials
@@ -34,6 +35,7 @@ fun Route.login(hash: (String) -> String) {
      */
     post<Login> {
         val userDao by kodein().instance<UserManagementDAO>()
+        val roleDAO by kodein().instance<RoleHierarchyDAO>()
         val userCredentials = call.receive<UserCredentials>()
 
         val login = when {
@@ -50,7 +52,7 @@ fun Route.login(hash: (String) -> String) {
                 CustomAclSession(
                     UUID.randomUUID().toString(),
                     login.username,
-                    login.roles.map(GrantedRole::getRoleIdentity)
+                    roleDAO.effectiveRoles(login.roles).map(GrantedRole::getRoleIdentity)
                 )
             )
             call.respond(HttpStatusCode.OK)
@@ -58,7 +60,7 @@ fun Route.login(hash: (String) -> String) {
     }
 
     /**
-     * A GET request to the [Logout] page, removes the session and redirects to the [Index] page.
+     * A GET request to the [Logout] page, removes the session
      */
     get<Logout> {
         call.sessions.clear<CustomAclSession>()
