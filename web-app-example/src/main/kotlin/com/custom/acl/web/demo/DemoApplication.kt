@@ -6,14 +6,13 @@ import com.custom.acl.core.jdbc.dao.UserManagementDAO
 import com.custom.acl.core.jdbc.dao.UserManagementDatabase
 import com.custom.acl.core.jdbc.utils.DatabaseFactory
 import com.custom.acl.core.role.GrantedRole
+import com.custom.acl.web.demo.exception.ValidationException
 import com.custom.acl.web.demo.util.SecurityUtils
 import com.custom.acl.web.demo.util.SecurityUtils.hash
 import com.custom.acl.web.demo.util.checkAndInit
 import com.custom.acl.web.demo.util.hikariConfig
-import io.ktor.application.Application
+import io.ktor.application.*
 import io.ktor.application.ApplicationCallPipeline.ApplicationPhase.Call
-import io.ktor.application.call
-import io.ktor.application.install
 import io.ktor.auth.Authentication
 import io.ktor.auth.authenticate
 import io.ktor.auth.principal
@@ -25,6 +24,8 @@ import io.ktor.features.StatusPages
 import io.ktor.http.HttpStatusCode
 import io.ktor.locations.KtorExperimentalLocationsAPI
 import io.ktor.locations.Locations
+import io.ktor.request.httpMethod
+import io.ktor.request.uri
 import io.ktor.response.respond
 import io.ktor.routing.*
 import io.ktor.serialization.json
@@ -34,15 +35,13 @@ import io.ktor.sessions.Sessions
 import io.ktor.sessions.header
 import io.ktor.util.KtorExperimentalAPI
 import io.ktor.util.hex
-import io.ktor.util.pipeline.PipelinePhase
 import kotlinx.serialization.SerializationException
-import mu.KotlinLogging
+import kotlinx.serialization.json.json
 import org.jetbrains.exposed.sql.Database
 import org.kodein.di.generic.bind
+import org.kodein.di.generic.instance
 import org.kodein.di.generic.singleton
 import org.kodein.di.ktor.kodein
-
-private val logger = KotlinLogging.logger {}
 
 /**
  * Entry Point of the application. This function is referenced in the
@@ -86,22 +85,35 @@ fun Application.main() {
     install(StatusPages) {
         exception<SerializationException> { cause ->
             call.respond(
-                HttpStatusCode.BadRequest.description(
-                    cause.message ?: "Serialization/deserialization problem"
-                )
+                HttpStatusCode.BadRequest,
+                jsonMessage(cause.message ?: "Serialization/deserialization problem")
+            )
+        }
+        exception<ValidationException> { cause ->
+            call.respond(
+                HttpStatusCode.BadRequest,
+                jsonMessage(cause.message ?: "Validation is not passed")
+            )
+        }
+        exception<Exception> { cause ->
+            application.log.error("Error during processing request call: ${call.request.httpMethod} ${call.request.uri}")
+            application.environment.log
+            call.respond(
+                HttpStatusCode.InternalServerError,
+                jsonMessage("Something went wrong, please try again later or contact administrator")
             )
         }
     }
 
     kodein {
-        val db = DatabaseFactory.connectToDb(hikariConfig(this@main))
-        checkAndInit(db, defaultAdminName, hash(defaultAdminPassword))
-        bind<Database>("db") with singleton { db }
+        val db = DatabaseFactory.connectToDb(this@main.hikariConfig())
+        db.checkAndInit(defaultAdminName, hash(defaultAdminPassword))
+        bind<Database>("mainDatabase") with singleton { db }
         bind<UserManagementDAO>() with singleton {
-            UserManagementDatabase(db)
+            UserManagementDatabase(instance("mainDatabase"))
         }
         bind<RoleHierarchyDAO>() with singleton {
-            RoleHierarchyDatabase(db)
+            RoleHierarchyDatabase(instance("mainDatabase"))
         }
     }
 
@@ -116,39 +128,46 @@ fun Application.main() {
         json()
     }
 
-    // Registers routes
+// Registers routes
     routing {
+        registration(SecurityUtils::hash)
         login(SecurityUtils::hash)
         authenticate("custom-session-auth") {
             withRole("REVIEWER") {
-                withRole("GOD") {
+                withRole("GODMODE") {
                     get("/") {
-                        call.respond(HttpStatusCode.OK, "DEMO has started")
+                        call.respond(HttpStatusCode.ExpectationFailed, jsonMessage("You should have no access here"))
                     }
                 }
                 get("/demo") {
-                    call.respond(HttpStatusCode.OK, "DEMO has started for reviewer")
+                    call.respond(HttpStatusCode.OK, jsonMessage("DEMO has started for reviewer"))
                 }
             }
         }
     }
 }
 
-val ACL = PipelinePhase("RoleCheck")
+/**
+ * Build route with check for particular roles, if there are no roles, access would be forbidden
+ *
+ * @param role role identity to be present in [PrincipalWithRoles]
+ */
+@KtorExperimentalAPI
+fun Route.withRole(role: String, build: Route.() -> Unit): Route = withAnyRole(listOf(role), build)
+
 
 @KtorExperimentalAPI
-fun Route.withRole(role: String, build: Route.() -> Unit): Route {
-    val aclRoute = createChild(AclRouteSelector(role))
+fun Route.withAnyRole(roles: Collection<String>, build: Route.() -> Unit): Route {
+    val aclRoute = createChild(AclRouteSelector(roles))
     aclRoute.intercept(Call) {
         val principalWithRoles = call.principal<PrincipalWithRoles>()
-        when {
-            principalWithRoles == null -> call.respond(HttpStatusCode.Forbidden.description("Insufficient roles"))
-            principalWithRoles
-                .resolveRoles()
+        if (principalWithRoles != null
+            && principalWithRoles.resolveRoles()
                 .map(GrantedRole::getRoleIdentity)
-                .contains(role) -> return@intercept
-            else -> call.respond(HttpStatusCode.Forbidden.description("Insufficient roles"))
-        }
+                .any(roles::contains)
+        ) return@intercept
+        call.respond(HttpStatusCode.Forbidden.description("Insufficient roles"))
+        finish()
     }
     aclRoute.build()
     return aclRoute
@@ -160,10 +179,14 @@ fun Route.withRole(role: String, build: Route.() -> Unit): Route {
  * unless you are writing an extension
  * @param names of authentication providers to be applied to this route
  */
-class AclRouteSelector(val role: String) : RouteSelector(RouteSelectorEvaluation.qualityConstant) {
+class AclRouteSelector(val roles: Collection<String>) : RouteSelector(RouteSelectorEvaluation.qualityConstant) {
     override fun evaluate(context: RoutingResolveContext, segmentIndex: Int): RouteSelectorEvaluation {
         return RouteSelectorEvaluation.Constant
     }
 
-    override fun toString(): String = "(check role $role)"
+    override fun toString(): String = "(check roles ${roles.joinToString()})"
+}
+
+fun jsonMessage(message: String) = json {
+    "message" to message
 }

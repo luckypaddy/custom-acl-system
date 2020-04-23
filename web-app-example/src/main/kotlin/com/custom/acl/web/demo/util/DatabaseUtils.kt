@@ -10,41 +10,44 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 
 @KtorExperimentalAPI
-fun hikariConfig(app: Application): HikariConfig {
+fun Application.hikariConfig(): HikariConfig {
     val config = HikariConfig()
 
     //TODO rework it with reflection+delegation and application.environment.config.config("hikaricp")
-    val dataSourceClassName = app.environment.config.propertyOrNull("hikaricp.dataSourceClassName")?.getString()
+    val dataSourceClassName = environment.config.propertyOrNull("hikaricp.dataSourceClassName")?.getString()
     if (!dataSourceClassName.isNullOrBlank()) config.dataSourceClassName = dataSourceClassName
 
-    val driverClassName = app.environment.config.propertyOrNull("hikaricp.driverClassName")?.getString()
+    val driverClassName = environment.config.propertyOrNull("hikaricp.driverClassName")?.getString()
     if (!driverClassName.isNullOrBlank()) config.driverClassName = driverClassName
 
-    val jdbcUrl = app.environment.config.propertyOrNull("hikaricp.jdbcUrl")?.getString()
+    val jdbcUrl = environment.config.propertyOrNull("hikaricp.jdbcUrl")?.getString()
     if (!jdbcUrl.isNullOrBlank()) config.jdbcUrl = jdbcUrl
 
-    val username = app.environment.config.propertyOrNull("hikaricp.username")?.getString()
+    val username = environment.config.propertyOrNull("hikaricp.username")?.getString()
     if (!username.isNullOrBlank()) config.username = username
 
-    val password = app.environment.config.propertyOrNull("hikaricp.password")?.getString()
+    val password = environment.config.propertyOrNull("hikaricp.password")?.getString()
     if (!password.isNullOrBlank()) config.password = password
 
-    val schema = app.environment.config.propertyOrNull("hikaricp.schema")?.getString()
+    val schema = environment.config.propertyOrNull("hikaricp.schema")?.getString()
     if (!password.isNullOrBlank()) config.schema = schema
 
-    val transactionIsolation = app.environment.config.propertyOrNull("hikaricp.transactionIsolation")?.getString()
+    val transactionIsolation = environment.config.propertyOrNull("hikaricp.transactionIsolation")?.getString()
     if (!transactionIsolation.isNullOrBlank()) config.transactionIsolation = transactionIsolation
 
     config.isAutoCommit =
-        app.environment.config.propertyOrNull("hikaricp.isAutoCommit")?.getString()?.toBoolean() ?: true
+        environment.config.propertyOrNull("hikaricp.isAutoCommit")?.getString()?.toBoolean() ?: true
     config.maximumPoolSize =
-        app.environment.config.propertyOrNull("hikaricp.maximumPoolSize")?.getString()?.toInt() ?: 5
+        environment.config.propertyOrNull("hikaricp.maximumPoolSize")?.getString()?.toInt() ?: 5
 
     return config
 }
 
-fun checkAndInit(database: Database, adminName: String, adminPwdHash: String) {
-    transaction(database) {
+fun Database.checkAndInit(
+    adminName: String,
+    adminPwdHash: String
+) {
+    transaction(this) {
         SchemaUtils.createMissingTablesAndColumns(
             HierarchicalRoles,
             PersistedUsers,
