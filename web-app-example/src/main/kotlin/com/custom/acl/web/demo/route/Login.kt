@@ -1,9 +1,12 @@
-package com.custom.acl.web.demo
+package com.custom.acl.web.demo.route
 
 import com.custom.acl.core.jdbc.dao.RoleHierarchyDAO
 import com.custom.acl.core.jdbc.dao.UserManagementDAO
 import com.custom.acl.core.role.GrantedRole
+import com.custom.acl.web.demo.Login
+import com.custom.acl.web.demo.Logout
 import com.custom.acl.web.demo.model.UserCredentials
+import com.custom.acl.web.demo.auth.CustomUserSession
 import com.custom.acl.web.demo.util.userNameValid
 import io.ktor.application.call
 import io.ktor.http.HttpStatusCode
@@ -18,7 +21,7 @@ import io.ktor.sessions.sessions
 import io.ktor.sessions.set
 import org.kodein.di.generic.instance
 import org.kodein.di.ktor.kodein
-import java.util.*
+import java.time.Instant
 
 /**
  * Registers the [Login] and [Logout] routes '/login' and '/logout'.
@@ -35,7 +38,7 @@ fun Route.login(hash: (String) -> String) {
      */
     post<Login> {
         val userDao by kodein().instance<UserManagementDAO>()
-        val roleDAO by kodein().instance<RoleHierarchyDAO>()
+        val rolesDao by kodein().instance<RoleHierarchyDAO>()
         val userCredentials = call.receive<UserCredentials>()
 
         val login = when {
@@ -49,10 +52,9 @@ fun Route.login(hash: (String) -> String) {
             call.respond(HttpStatusCode.BadRequest.description("Invalid username or password"))
         } else {
             call.sessions.set(
-                CustomAclSession(
-                    UUID.randomUUID().toString(),
-                    login.username,
-                    roleDAO.effectiveRoles(login.roles).map(GrantedRole::getRoleIdentity)
+                CustomUserSession(
+                    login.username, Instant.now().epochSecond,
+                    rolesDao.effectiveRoles(login.roles).map(GrantedRole::getRoleIdentity)
                 )
             )
             call.respond(HttpStatusCode.OK)
@@ -63,7 +65,7 @@ fun Route.login(hash: (String) -> String) {
      * A GET request to the [Logout] page, removes the session
      */
     get<Logout> {
-        call.sessions.clear<CustomAclSession>()
+        call.sessions.clear<CustomUserSession>()
         call.respond(HttpStatusCode.NoContent)
     }
 }

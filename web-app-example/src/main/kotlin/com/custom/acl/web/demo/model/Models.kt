@@ -3,10 +3,7 @@ package com.custom.acl.web.demo.model
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class UserCredentials(
-    val name: String,
-    val password: String
-)
+data class UserCredentials(val name: String, val password: String)
 
 @Serializable
 data class RegistrationRequest(val userName: String, val password: String)

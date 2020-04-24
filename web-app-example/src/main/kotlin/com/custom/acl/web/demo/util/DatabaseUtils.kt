@@ -48,7 +48,7 @@ fun Database.checkAndInit(
     adminPwdHash: String
 ) {
     transaction(this) {
-        SchemaUtils.createMissingTablesAndColumns(
+        SchemaUtils.create(
             HierarchicalRoles,
             PersistedUsers,
             UserRoles

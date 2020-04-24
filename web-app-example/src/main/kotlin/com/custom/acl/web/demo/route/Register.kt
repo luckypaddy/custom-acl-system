@@ -1,11 +1,15 @@
-package com.custom.acl.web.demo
+package com.custom.acl.web.demo.route
 
 import com.custom.acl.core.jdbc.dao.RoleHierarchyDAO
 import com.custom.acl.core.jdbc.dao.UserManagementDAO
 import com.custom.acl.core.user.User
+import com.custom.acl.web.demo.ChangePassword
+import com.custom.acl.web.demo.Register
 import com.custom.acl.web.demo.exception.ValidationException
+import com.custom.acl.web.demo.jsonMessage
 import com.custom.acl.web.demo.model.PasswordChangeRequest
 import com.custom.acl.web.demo.model.RegistrationRequest
+import com.custom.acl.web.demo.auth.CustomUserSession
 import com.custom.acl.web.demo.util.userNameValid
 import io.ktor.application.call
 import io.ktor.http.HttpStatusCode
@@ -39,7 +43,7 @@ fun Route.registration(hashFunction: (String) -> String) {
         val userDao by kodein().instance<UserManagementDAO>()
         val roleDAO by kodein().instance<RoleHierarchyDAO>()
 
-        val session = call.sessions.get<CustomAclSession>()
+        val session = call.sessions.get<CustomUserSession>()
         if (session != null)
             return@post call.respond(HttpStatusCode.NoContent, json { "message" to "User is already registered" })
 

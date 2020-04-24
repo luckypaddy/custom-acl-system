@@ -7,6 +7,7 @@ import javax.crypto.spec.SecretKeySpec
 
 
 object SecurityUtils {
+
     /**
      * Hardcoded secret hash key used to hash the user's passwords, because they are persisted
      */

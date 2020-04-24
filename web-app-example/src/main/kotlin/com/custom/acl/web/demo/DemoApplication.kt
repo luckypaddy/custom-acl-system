@@ -5,17 +5,19 @@ import com.custom.acl.core.jdbc.dao.RoleHierarchyDatabase
 import com.custom.acl.core.jdbc.dao.UserManagementDAO
 import com.custom.acl.core.jdbc.dao.UserManagementDatabase
 import com.custom.acl.core.jdbc.utils.DatabaseFactory
-import com.custom.acl.core.role.GrantedRole
 import com.custom.acl.web.demo.exception.ValidationException
+import com.custom.acl.web.demo.route.login
+import com.custom.acl.web.demo.route.registration
+import com.custom.acl.web.demo.route.withRole
+import com.custom.acl.web.demo.auth.CustomUserSession
+import com.custom.acl.web.demo.auth.toUser
 import com.custom.acl.web.demo.util.SecurityUtils
 import com.custom.acl.web.demo.util.SecurityUtils.hash
 import com.custom.acl.web.demo.util.checkAndInit
 import com.custom.acl.web.demo.util.hikariConfig
 import io.ktor.application.*
-import io.ktor.application.ApplicationCallPipeline.ApplicationPhase.Call
 import io.ktor.auth.Authentication
 import io.ktor.auth.authenticate
-import io.ktor.auth.principal
 import io.ktor.auth.session
 import io.ktor.features.CallLogging
 import io.ktor.features.ContentNegotiation
@@ -27,12 +29,11 @@ import io.ktor.locations.Locations
 import io.ktor.request.httpMethod
 import io.ktor.request.uri
 import io.ktor.response.respond
-import io.ktor.routing.*
+import io.ktor.routing.get
+import io.ktor.routing.routing
 import io.ktor.serialization.json
-import io.ktor.sessions.SessionStorageMemory
-import io.ktor.sessions.SessionTransportTransformerEncrypt
-import io.ktor.sessions.Sessions
-import io.ktor.sessions.header
+import io.ktor.sessions.*
+import io.ktor.util.InternalAPI
 import io.ktor.util.KtorExperimentalAPI
 import io.ktor.util.hex
 import kotlinx.serialization.SerializationException
@@ -42,6 +43,7 @@ import org.kodein.di.generic.bind
 import org.kodein.di.generic.instance
 import org.kodein.di.generic.singleton
 import org.kodein.di.ktor.kodein
+import java.time.Instant
 
 /**
  * Entry Point of the application. This function is referenced in the
@@ -50,6 +52,7 @@ import org.kodein.di.ktor.kodein
  */
 
 
+@InternalAPI
 @KtorExperimentalLocationsAPI
 @KtorExperimentalAPI
 fun Application.main() {
@@ -63,6 +66,8 @@ fun Application.main() {
     val sessionSignKey = hex(sessionEncryptionConfig.property("signKey").getString())
     val sessionIV = hex(sessionEncryptionConfig.property("iv").getString())
 
+    val sessionDuration = environment.config.propertyOrNull("default.session.duration")?.getString()?.toLong() ?: 5
+
     // This adds automatically Date and Server headers to each response, and would allow you to configure
     // additional headers served to each response.
     install(DefaultHeaders)
@@ -71,8 +76,20 @@ fun Application.main() {
 
     install(Locations)
 
+    kodein {
+        val db = DatabaseFactory.connectToDb(this@main.hikariConfig())
+        db.checkAndInit(defaultAdminName, hash(defaultAdminPassword))
+        bind<Database>("mainDatabase") with singleton { db }
+        bind<UserManagementDAO>() with singleton {
+            UserManagementDatabase(instance("mainDatabase"))
+        }
+        bind<RoleHierarchyDAO>() with singleton {
+            RoleHierarchyDatabase(instance("mainDatabase"))
+        }
+    }
+
     install(Sessions) {
-        header<CustomAclSession>(name = "Custom-Auth-Key", storage = SessionStorageMemory()) {
+        header<CustomUserSession>(name = "Custom-Auth-Key") {
             transform(
                 SessionTransportTransformerEncrypt(
                     encryptionKey = sessionEncryptionKey,
@@ -96,7 +113,10 @@ fun Application.main() {
             )
         }
         exception<Exception> { cause ->
-            application.log.error("Error during processing request call: ${call.request.httpMethod} ${call.request.uri}")
+            application.log.error(
+                "Error during processing request call: ${call.request.httpMethod} ${call.request.uri}",
+                cause
+            )
             application.environment.log
             call.respond(
                 HttpStatusCode.InternalServerError,
@@ -105,22 +125,17 @@ fun Application.main() {
         }
     }
 
-    kodein {
-        val db = DatabaseFactory.connectToDb(this@main.hikariConfig())
-        db.checkAndInit(defaultAdminName, hash(defaultAdminPassword))
-        bind<Database>("mainDatabase") with singleton { db }
-        bind<UserManagementDAO>() with singleton {
-            UserManagementDatabase(instance("mainDatabase"))
-        }
-        bind<RoleHierarchyDAO>() with singleton {
-            RoleHierarchyDatabase(instance("mainDatabase"))
-        }
-    }
 
     install(Authentication) {
-        session<CustomAclSession>("custom-session-auth") {
-            challenge { call.respond(HttpStatusCode.Unauthorized) }
-            validate { customAclSession -> customAclSession }
+        session<CustomUserSession>("custom-session-auth") {
+            challenge { call.respond(HttpStatusCode.Unauthorized, jsonMessage("Session is expired or missing")) }
+            validate { customUserSession ->
+                if (Instant.now().epochSecond - customUserSession.timestamp > sessionDuration) {
+                    sessions.clear<CustomUserSession>()
+                    return@validate null
+                }
+                customUserSession.toUser()
+            }
         }
     }
 
@@ -145,46 +160,6 @@ fun Application.main() {
             }
         }
     }
-}
-
-/**
- * Build route with check for particular roles, if there are no roles, access would be forbidden
- *
- * @param role role identity to be present in [PrincipalWithRoles]
- */
-@KtorExperimentalAPI
-fun Route.withRole(role: String, build: Route.() -> Unit): Route = withAnyRole(listOf(role), build)
-
-
-@KtorExperimentalAPI
-fun Route.withAnyRole(roles: Collection<String>, build: Route.() -> Unit): Route {
-    val aclRoute = createChild(AclRouteSelector(roles))
-    aclRoute.intercept(Call) {
-        val principalWithRoles = call.principal<PrincipalWithRoles>()
-        if (principalWithRoles != null
-            && principalWithRoles.resolveRoles()
-                .map(GrantedRole::getRoleIdentity)
-                .any(roles::contains)
-        ) return@intercept
-        call.respond(HttpStatusCode.Forbidden.description("Insufficient roles"))
-        finish()
-    }
-    aclRoute.build()
-    return aclRoute
-}
-
-/**
- * An role check route node that is used
- * and usually created by [Route.authenticate] DSL function so generally there is no need to instantiate it directly
- * unless you are writing an extension
- * @param names of authentication providers to be applied to this route
- */
-class AclRouteSelector(val roles: Collection<String>) : RouteSelector(RouteSelectorEvaluation.qualityConstant) {
-    override fun evaluate(context: RoutingResolveContext, segmentIndex: Int): RouteSelectorEvaluation {
-        return RouteSelectorEvaluation.Constant
-    }
-
-    override fun toString(): String = "(check roles ${roles.joinToString()})"
 }
 
 fun jsonMessage(message: String) = json {
