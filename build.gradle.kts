@@ -34,6 +34,7 @@ configure(subprojects) {
                 entry("exposed-core")
                 entry("exposed-dao")
                 entry("exposed-jdbc")
+                entry("exposed-java-time")
             }
             dependencySet("org.kodein.di:$kodeinVersion") {
                 entry("kodein-di-framework-ktor-server-controller-jvm")

@@ -2,6 +2,7 @@ package com.custom.acl.web.demo.route
 
 import com.custom.acl.core.role.GrantedRole
 import com.custom.acl.web.demo.auth.PrincipalWithRoles
+import com.custom.acl.web.demo.jsonMessage
 import io.ktor.application.ApplicationCallPipeline
 import io.ktor.application.call
 import io.ktor.auth.principal
@@ -14,14 +15,18 @@ import io.ktor.routing.RoutingResolveContext
 import io.ktor.util.KtorExperimentalAPI
 
 /**
- * Build route with check for particular roles, if there are no roles, access would be forbidden
+ * Build route with check for particular role, if there are no roles, access would be forbidden
  *
  * @param role role identity to be present in [PrincipalWithRoles]
  */
 @KtorExperimentalAPI
 fun Route.withRole(role: String, build: Route.() -> Unit): Route = withAnyRole(listOf(role), build)
 
-
+/**
+* Build route with check for any of specified roles, if there are no roles, access would be forbidden
+*
+* @param role role identity to be present in [PrincipalWithRoles]
+*/
 @KtorExperimentalAPI
 fun Route.withAnyRole(roles: Collection<String>, build: Route.() -> Unit): Route {
     val aclRoute = createChild(AclRouteSelector(roles))
@@ -32,7 +37,7 @@ fun Route.withAnyRole(roles: Collection<String>, build: Route.() -> Unit): Route
                 .map(GrantedRole::getRoleIdentity)
                 .any(roles::contains)
         ) return@intercept
-        call.respond(HttpStatusCode.Forbidden.description("Insufficient roles"))
+        call.respond(HttpStatusCode.Forbidden, jsonMessage("Insufficient roles for operation"))
         finish()
     }
     aclRoute.build()

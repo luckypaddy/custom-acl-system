@@ -6,11 +6,11 @@ import com.custom.acl.core.jdbc.dao.UserManagementDAO
 import com.custom.acl.core.jdbc.dao.UserManagementDatabase
 import com.custom.acl.core.jdbc.utils.DatabaseFactory
 import com.custom.acl.web.demo.exception.ValidationException
-import com.custom.acl.web.demo.route.login
-import com.custom.acl.web.demo.route.registration
-import com.custom.acl.web.demo.route.withRole
 import com.custom.acl.web.demo.auth.CustomUserSession
 import com.custom.acl.web.demo.auth.toUser
+import com.custom.acl.web.demo.dao.NewsFeedDAO
+import com.custom.acl.web.demo.dao.NewsFeedDatabase
+import com.custom.acl.web.demo.route.*
 import com.custom.acl.web.demo.util.SecurityUtils
 import com.custom.acl.web.demo.util.SecurityUtils.hash
 import com.custom.acl.web.demo.util.checkAndInit
@@ -29,7 +29,6 @@ import io.ktor.locations.Locations
 import io.ktor.request.httpMethod
 import io.ktor.request.uri
 import io.ktor.response.respond
-import io.ktor.routing.get
 import io.ktor.routing.routing
 import io.ktor.serialization.json
 import io.ktor.sessions.*
@@ -85,6 +84,9 @@ fun Application.main() {
         }
         bind<RoleHierarchyDAO>() with singleton {
             RoleHierarchyDatabase(instance("mainDatabase"))
+        }
+        bind<NewsFeedDAO>() with singleton {
+            NewsFeedDatabase(instance("mainDatabase"))
         }
     }
 
@@ -147,21 +149,33 @@ fun Application.main() {
     routing {
         registration(SecurityUtils::hash)
         login(SecurityUtils::hash)
+        newsFeed()
         authenticate("custom-session-auth") {
+
+            withRole("USER") {
+                postNew()
+            }
+
+            withRole("ADMIN") {
+                assignRoles()
+                deleteFeed()
+            }
+
             withRole("REVIEWER") {
-                withRole("GODMODE") {
-                    get("/") {
-                        call.respond(HttpStatusCode.ExpectationFailed, jsonMessage("You should have no access here"))
-                    }
-                }
-                get("/demo") {
-                    call.respond(HttpStatusCode.OK, jsonMessage("DEMO has started for reviewer"))
-                }
+                unpublishedFeeds()
+                viewFeed()
+                editFeed()
+                publishFeed()
             }
         }
     }
 }
 
+/**
+ * Wrapper function to create json body with "message" field
+ *
+ * @param message
+ */
 fun jsonMessage(message: String) = json {
     "message" to message
 }

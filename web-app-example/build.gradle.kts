@@ -26,9 +26,10 @@ dependencies {
     implementation( "org.jetbrains.exposed:exposed-core")
     implementation( "org.jetbrains.exposed:exposed-dao")
     implementation( "org.jetbrains.exposed:exposed-jdbc")
-    implementation("com.h2database", "h2", "1.4.200")
+    implementation( "org.jetbrains.exposed:exposed-java-time")
     implementation("io.github.microutils:kotlin-logging")
 
+    runtimeOnly("com.h2database", "h2", "1.4.200")
     runtimeOnly("org.postgresql:postgresql")
 
     testCompileOnly("org.junit.jupiter:junit-jupiter-api")

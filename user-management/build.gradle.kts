@@ -15,7 +15,7 @@ dependencies {
     implementation("io.github.microutils:kotlin-logging")
     implementation( "ch.qos.logback:logback-classic")
 //    implementation("com.natpryce:konfig")
-//    implementation("org.postgresql:postgresql")
+    implementation("org.postgresql:postgresql")
 
     testImplementation("com.h2database", "h2", "1.4.200")
     testImplementation("org.junit.jupiter:junit-jupiter-api")

@@ -83,6 +83,31 @@ internal class RoleHierarchyDatabaseTest : DatabaseTestsBase() {
     }
 
     @Test
+    fun `get hierarchy with depths without any roles`() {
+        withTables(HierarchicalRoles) {
+            assert(roleDao.hierarchyWithDepth().isEmpty()) { "Hierarchy should be empty" }
+        }
+    }
+
+    @Test
+    fun `get hierarchy with depths of roles`() {
+        withTables(HierarchicalRoles) {
+            createBasicRoles()
+
+            val hierarchy = roleDao.hierarchyWithDepth()
+
+            assert(hierarchy[USER_ROLE] ?.first == 0L) { "User role should have depth 0" }
+            assert(hierarchy[USER_ROLE]?.second == null) { "User role shouldn't have any member_of relations" }
+
+            assert(hierarchy[REVIEWER_ROLE]?.first == 1L) { "User role should have depth 1" }
+            assert(hierarchy[REVIEWER_ROLE]?.second == USER_ROLE) { "REVIEWER role should be member_of USER role" }
+
+            assert(hierarchy[ADMIN_ROLE]?.second == REVIEWER_ROLE) { "ADMIN role should be member_of REVIEWER role" }
+            assert(hierarchy[ADMIN_ROLE]?.second == REVIEWER_ROLE) { "ADMIN role should be member_of REVIEWER role" }
+        }
+    }
+
+    @Test
     fun `find existing role by its identity`() {
         withTables(HierarchicalRoles) {
             createBasicRoles()

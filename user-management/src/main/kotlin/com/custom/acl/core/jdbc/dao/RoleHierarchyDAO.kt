@@ -38,4 +38,11 @@ interface RoleHierarchyDAO: RoleHierarchy, Closeable {
      *
      */
     fun hierarchy(): Map<GrantedRole, GrantedRole?>
+
+    /**
+     * Full graph of member_of relations in current role hierarchy with depth of each node
+     *
+     * @return
+     */
+    fun hierarchyWithDepth(): Map<GrantedRole,Pair<Long,GrantedRole?>>
 }
