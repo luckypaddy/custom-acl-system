@@ -1,0 +1,113 @@
+{
+  "scenarioName": "Register user - Assign Needed Role - Delete News by non-existing Id - Change Password",
+  "steps": [
+    {
+      "name": "register_user",
+      "url": "${SYSTEM.PROPERTY:hostname}/register",
+      "operation": "POST",
+      "request": {
+        "body": {
+          "userName": "${RANDOM.STRING:8}",
+          "password": "${RANDOM.ALPHANUMERIC:8}"
+        }
+      },
+      "assertions": {
+        "status": 201,
+        "body": {
+          "message": "$NOT.NULL"
+        }
+      }
+    },
+    {
+      "name": "login_admin",
+      "url": "${SYSTEM.PROPERTY:hostname}/login",
+      "operation": "POST",
+      "request": {
+        "body": {
+          "name": "${SYSTEM.PROPERTY:admin_user}",
+          "password": "${SYSTEM.PROPERTY:admin_password}"
+        }
+      },
+      "assertions": {
+        "status": 200,
+        "headers": {
+          "Custom-Auth-Key": "$NOT.NULL"
+        }
+      }
+    },
+    {
+      "name": "assign_role",
+      "url": "${SYSTEM.PROPERTY:hostname}/roles/assign",
+      "operation": "PUT",
+      "request": {
+        "headers": {
+          "Custom-Auth-Key": "${$.login_admin.response.headers.Custom-Auth-Key[0]}"
+        },
+        "body": {
+          "userName": "${$.register_user.request.body.userName}",
+          "roleIdentities": [
+            "ADMIN"
+          ]
+        }
+      },
+      "assertions": {
+        "status": 200,
+        "body": {
+          "message": "$NOT.NULL"
+        }
+      }
+    },
+    {
+      "name": "login_user",
+      "url": "${SYSTEM.PROPERTY:hostname}/login",
+      "operation": "POST",
+      "request": {
+        "body": {
+          "name": "${$.register_user.request.body.userName}",
+          "password": "${$.register_user.request.body.password}"
+        }
+      },
+      "assertions": {
+        "status": 200,
+        "headers": {
+          "Custom-Auth-Key": "$NOT.NULL"
+        }
+      }
+    },
+    {
+      "name": "delete_news_feed",
+      "url": "${SYSTEM.PROPERTY:hostname}/news/2147483647/delete",
+      "operation": "DELETE",
+      "request": {
+        "headers": {
+          "Custom-Auth-Key": "${$.login_user.response.headers.Custom-Auth-Key[0]}"
+        },
+        "body": {
+        }
+      },
+      "assertions": {
+        "status": 404
+      }
+    },
+    {
+      "name": "change_password",
+      "url": "${SYSTEM.PROPERTY:hostname}/change/password",
+      "operation": "PUT",
+      "request": {
+        "headers": {
+          "Custom-Auth-Key": "${$.login_user.response.headers.Custom-Auth-Key[0]}"
+        },
+        "body": {
+          "oldPassword": "${$.register_user.request.body.password}",
+          "newPassword": "${RANDOM.ALPHANUMERIC:8}"
+        }
+      },
+      "assertions": {
+        "status": 200,
+        "body": {
+          "message": "$NOT.NULL"
+        }
+      }
+    }
+  ]
+}

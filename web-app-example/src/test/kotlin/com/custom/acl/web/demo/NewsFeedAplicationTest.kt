@@ -6,19 +6,19 @@ import org.jsmart.zerocode.core.runner.ZeroCodeUnitRunner
 import org.junit.Test
 import org.junit.runner.RunWith
 
-//@TargetEnv("local_host.properties")
+@TargetEnv("local_host.properties")
 @RunWith(ZeroCodeUnitRunner::class)
 class NewsFeedAplicationTest {
 
     @Test
-    @Scenario("scenarios/registerGetNewsFeedChangePassword.json")
+    @Scenario("scenarios/registerGetNewsFeeds.json")
     fun test1() {
     }
 
-//    @Test
-//    @Scenario("scenarios/registerAssignRoleGetUnpublished.json")
-//    fun test2() {
-//    }
+    @Test
+    @Scenario("scenarios/registerAssignRoleGetUnpublished.json")
+    fun test2() {
+    }
 //
 //    @Test
 //    @Scenario("scenarios/registerAssignRolePostFeedGetFeed.json")
@@ -34,4 +34,17 @@ class NewsFeedAplicationTest {
 //    @Scenario("scenarios/registerAssignRandomRolePostFeedDeleteFeed.json")
 //    fun test5() {
 //    }
+//    @Test
+//    @Scenario("scenarios/registerAssignNeededRoleDeleteNotExistingFeed.json")
+//    fun test5() {
+//    }
+//    @Test
+//    @Scenario("scenarios/registerAssignNeededRolePublishNotExistingFeed.json")
+//    fun test5() {
+//    }
+//    @Test
+//    @Scenario("scenarios/registerAssignNeededRolePublishNotExistingFeed.json")
+//    fun test5() {
+//    }
+
 }

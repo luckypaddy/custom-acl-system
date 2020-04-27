@@ -1,0 +1,152 @@
+{
+  "scenarioName": "Register user - Assign Random Role - Post News - Edit News by Id - Change Password",
+  "steps": [
+    {
+      "name": "register_user",
+      "url": "${SYSTEM.PROPERTY:hostname}/register",
+      "operation": "POST",
+      "request": {
+        "body": {
+          "userName": "${RANDOM.STRING:8}",
+          "password": "${RANDOM.ALPHANUMERIC:8}"
+        }
+      },
+      "assertions": {
+        "status": 201,
+        "body": {
+          "message": "$NOT.NULL"
+        }
+      }
+    },
+    {
+      "name": "resolve_role_publish",
+      "url": "com.custom.acl.test.RoleResolver",
+      "operation": "generateRoleForPublish",
+      "request": {
+      },
+      "retry": {
+        "max": 3,
+        "delay": 1000
+      },
+      "assertions": {
+        "role": "$NOT.NULL",
+        "status": "$NOT.NULL"
+      }
+    },
+    {
+      "name": "login_admin",
+      "url": "${SYSTEM.PROPERTY:hostname}/login",
+      "operation": "POST",
+      "request": {
+        "body": {
+          "name": "${SYSTEM.PROPERTY:admin_user}",
+          "password": "${SYSTEM.PROPERTY:admin_password}"
+        }
+      },
+      "assertions": {
+        "status": 200,
+        "headers": {
+          "Custom-Auth-Key": "$NOT.NULL"
+        }
+      }
+    },
+    {
+      "name": "assign_role",
+      "url": "${SYSTEM.PROPERTY:hostname}/roles/assign",
+      "operation": "PUT",
+      "request": {
+        "headers": {
+          "Custom-Auth-Key": "${$.login_admin.response.headers.Custom-Auth-Key[0]}"
+        },
+        "body": {
+          "userName": "${$.register_user.request.body.userName}",
+          "roleIdentities": [
+            "${$.resolve_role_publish.response.role}"
+          ]
+        }
+      },
+      "assertions": {
+        "status": 200,
+        "body": {
+          "message": "$NOT.NULL"
+        }
+      }
+    },
+    {
+      "name": "login_user",
+      "url": "${SYSTEM.PROPERTY:hostname}/login",
+      "operation": "POST",
+      "request": {
+        "body": {
+          "name": "${$.register_user.request.body.userName}",
+          "password": "${$.register_user.request.body.password}"
+        }
+      },
+      "assertions": {
+        "status": 200,
+        "headers": {
+          "Custom-Auth-Key": "$NOT.NULL"
+        }
+      }
+    },
+    {
+      "name": "post_news_feed",
+      "url": "${SYSTEM.PROPERTY:hostname}/news/post",
+      "operation": "POST",
+      "request": {
+        "headers": {
+          "Custom-Auth-Key": "${$.login_user.response.headers.Custom-Auth-Key[0]}"
+        },
+        "body": {
+          "title": "some title",
+          "content": "some news here",
+          "source": "https://google.com"
+        }
+      },
+      "assertions": {
+        "status": 201,
+        "body": {
+          "id": "$NOT.NULL"
+        }
+      }
+    },
+    {
+      "name": "edit_news_feed",
+      "url": "${SYSTEM.PROPERTY:hostname}/news/${$.post_news_feed.response.body.id}/edit",
+      "operation": "PUT",
+      "request": {
+        "headers": {
+          "Custom-Auth-Key": "${$.login_user.response.headers.Custom-Auth-Key[0]}"
+        },
+        "body": {
+          "title": "some edited title",
+          "content": "some updated news here",
+          "source": "https://google.com"
+        }
+      },
+      "assertions": {
+        "status": "$EQ.${$.resolve_role_publish.response.status}"
+      }
+    },
+    {
+      "name": "change_password",
+      "url": "${SYSTEM.PROPERTY:hostname}/change/password",
+      "operation": "PUT",
+      "request": {
+        "headers": {
+          "Custom-Auth-Key": "${$.login_user.response.headers.Custom-Auth-Key[0]}"
+        },
+        "body": {
+          "oldPassword": "${$.register_user.request.body.password}",
+          "newPassword": "${RANDOM.ALPHANUMERIC:8}"
+        }
+      },
+      "assertions": {
+        "status": 200,
+        "body": {
+          "message": "$NOT.NULL"
+        }
+      }
+    }
+  ]
+}

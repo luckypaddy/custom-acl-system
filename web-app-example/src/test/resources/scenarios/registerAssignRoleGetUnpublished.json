@@ -1,0 +1,123 @@
+{
+  "scenarioName": "Register user - Get News Feed - Change Password",
+  "steps": [
+    {
+      "name": "register_user",
+      "url": "${SYSTEM.PROPERTY:hostname}/register",
+      "operation": "POST",
+      "request": {
+        "body": {
+          "userName": "${RANDOM.STRING:8}",
+          "password": "${RANDOM.ALPHANUMERIC:8}"
+        }
+      },
+      "assertions": {
+        "status": 201,
+        "body": {
+          "message": "$NOT.NULL"
+        }
+      }
+    },
+    {
+      "name": "resolve_role_unpublish",
+      "url": "com.custom.acl.web.demo.RoleResolver",
+      "operation": "generateRoleForUnpublished",
+      "request": "any_param_or_empty",
+      "assertions": {
+        "role" : "$NOT.NULL",
+        "status" : "$NOT.NULL"
+      }
+    }
+    ,
+    {
+      "name": "login_admin",
+      "url": "${SYSTEM.PROPERTY:hostname}/login",
+      "operation": "POST",
+      "request": {
+        "body": {
+          "name": "${SYSTEM.PROPERTY:admin_user}",
+          "password": "${SYSTEM.PROPERTY:admin_password}"
+        }
+      },
+      "assertions": {
+        "status": 200,
+        "headers": {
+          "Custom-Auth-Key": "$NOT.NULL"
+        }
+      }
+    },
+    {
+      "name": "assign_role",
+      "url": "${SYSTEM.PROPERTY:hostname}/roles/assign",
+      "operation": "PUT",
+      "request": {
+        "headers": {
+          "Custom-Auth-Key": "${$.login_admin.response.headers.Custom-Auth-Key[0]}"
+        },
+        "body": {
+          "userName": "${$.register_user.request.body.userName}",
+          "roleIdentities": ["${$.resolve_role_unpublish.response.role}"]
+        }
+      },
+      "assertions": {
+        "status": 200,
+        "body": {
+          "message": "$NOT.NULL"
+        }
+      }
+    },
+    {
+      "name": "login_user",
+      "url": "${SYSTEM.PROPERTY:hostname}/login",
+      "operation": "POST",
+      "request": {
+        "body": {
+          "name": "${$.register_user.request.body.userName}",
+          "password": "${$.register_user.request.body.password}"
+        }
+      },
+      "assertions": {
+        "status": 200,
+        "headers": {
+          "Custom-Auth-Key": "$NOT.NULL"
+        }
+      }
+    },
+    {
+      "name": "get_unpublished_news",
+      "url": "${SYSTEM.PROPERTY:hostname}/news/unpublished",
+      "operation": "GET",
+      "request": {
+        "headers": {
+          "Custom-Auth-Key": "${$.login_user.response.headers.Custom-Auth-Key[0]}"
+        },
+        "body": {
+
+        }
+      },
+      "assertions": {
+        "status": "$EQ.${$.resolve_role_unpublish.response.status}"
+      }
+    },
+    {
+      "name": "change_password",
+      "url": "${SYSTEM.PROPERTY:hostname}/change/password",
+      "operation": "PUT",
+      "request": {
+        "headers": {
+          "Custom-Auth-Key": "${$.login_user.response.headers.Custom-Auth-Key[0]}"
+        },
+        "body": {
+          "oldPassword": "${$.register_user.request.body.password}",
+          "newPassword": "${RANDOM.ALPHANUMERIC:8}"
+        }
+      },
+      "assertions": {
+        "status": 200,
+        "body": {
+          "message": "$NOT.NULL"
+        }
+      }
+    }
+  ]
+}

@@ -10,3 +10,4 @@ pluginManagement {
         id("io.spring.dependency-management") version "1.0.9.RELEASE" apply false
     }
 }
+include("web-app-test")

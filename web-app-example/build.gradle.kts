@@ -61,5 +61,7 @@ tasks.withType<Test> {
     useJUnitPlatform() {
         systemProperty("zerocode.junit", "gen-smart-charts-csv-reports")
         systemProperty("hostname", "http://localhost:8080")
+        systemProperty("admin_user", "Admin")
+        systemProperty("admin_password", "securedpwd")
     }
 }

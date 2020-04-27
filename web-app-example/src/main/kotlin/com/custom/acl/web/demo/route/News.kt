@@ -75,7 +75,7 @@ fun Route.editFeed() {
         val isUpdated = newFeedDao.update(id, title, content, source)
         when {
             isUpdated -> call.respond(HttpStatusCode.OK, jsonMessage("Feed with id $id is updated"))
-            else -> throw ValidationException("News with id $id are not found")
+            else -> call.respond(HttpStatusCode.NotFound, jsonMessage("News with id $id are not found"))
         }
     }
 }
@@ -93,7 +93,7 @@ fun Route.publishFeed() {
 
         when {
             isPublished -> call.respond(HttpStatusCode.OK, jsonMessage("Feed with id $id is published"))
-            else -> throw ValidationException("News with id $id are not found")
+            else -> call.respond(HttpStatusCode.NotFound, jsonMessage("News with id $id are not found"))
         }
     }
 }
@@ -111,7 +111,7 @@ fun Route.deleteFeed() {
 
         when {
             isDeleted -> call.respond(HttpStatusCode.OK, jsonMessage("Feed with id $id is deleted"))
-            else -> throw ValidationException("News with id $id are not found")
+            else -> call.respond(HttpStatusCode.NotFound, jsonMessage("News with id $id are not found"))
         }
     }
 }
@@ -120,14 +120,14 @@ fun Route.deleteFeed() {
  * Route to get single feed by its Id
  *
  */
-fun Route.viewFeed(){
-    get<News.Id> {newsId ->
+fun Route.viewFeed() {
+    get<News.Id> { newsId ->
         val newFeedDao by kodein().instance<NewsFeedDAO>()
         val id = newsId.id
 
-        when (val feed = newFeedDao.findById(id)){
-            null ->throw ValidationException("News with id $id are not found")
-            else ->call.respond(HttpStatusCode.OK, feed)
+        when (val feed = newFeedDao.findById(id)) {
+            null -> call.respond(HttpStatusCode.NotFound, jsonMessage("News with id $id are not found"))
+            else -> call.respond(HttpStatusCode.OK, feed)
         }
     }
 }
