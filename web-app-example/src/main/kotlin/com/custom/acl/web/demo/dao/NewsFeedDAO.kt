@@ -4,6 +4,10 @@ import com.custom.acl.web.demo.model.NewsFeed
 import java.net.URL
 import java.time.LocalDateTime
 
+/**
+ * DAO Interface for news feed
+ *
+ */
 interface NewsFeedDAO {
     fun create(
         userId: String,

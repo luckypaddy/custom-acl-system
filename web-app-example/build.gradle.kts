@@ -32,8 +32,13 @@ dependencies {
     runtimeOnly("com.h2database", "h2", "1.4.200")
     runtimeOnly("org.postgresql:postgresql")
 
-    testCompileOnly("org.junit.jupiter:junit-jupiter-api")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
+    testImplementation("org.junit.jupiter:junit-jupiter-api")
+//    testImplementation("com.google.guava:guava:29.0-jre")
+//    testImplementation("com.google.code.gson:gson:2.8.6")
+
+    testImplementation("org.jsmart:zerocode-tdd-jupiter")
+    testImplementation("org.jsmart:zerocode-tdd")
+    testImplementation("org.junit.jupiter:junit-jupiter-engine")
 }
 
 tasks {
@@ -47,4 +52,14 @@ tasks {
 
 application {
     mainClassName = "com.custom.acl.web.demo.MainKt"
+}
+
+tasks.withType<Test> {
+    testLogging {
+        showStandardStreams = true
+    }
+    useJUnitPlatform() {
+        systemProperty("zerocode.junit", "gen-smart-charts-csv-reports")
+        systemProperty("hostname", "http://localhost:8080")
+    }
 }

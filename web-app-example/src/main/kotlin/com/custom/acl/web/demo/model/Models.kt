@@ -4,12 +4,25 @@ import kotlinx.serialization.Serializable
 import java.net.URL
 import java.time.LocalDateTime
 
+/**
+ * User credentials for authentication
+ *
+ *
+ * @property name user name
+ * @property password user password
+ */
 @Serializable
 data class UserCredentials(
     val name: String,
     val password: String
 )
 
+/**
+ * Request for registration of user
+ *
+ * @property userName user name
+ * @property password
+ */
 @Serializable
 data class RegistrationRequest(
     val userName: String,
@@ -18,7 +31,6 @@ data class RegistrationRequest(
 
 @Serializable
 data class PasswordChangeRequest(
-    val userName: String,
     val oldPassword: String,
     val newPassword: String
 )

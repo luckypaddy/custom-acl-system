@@ -5,7 +5,9 @@ import io.ktor.util.hex
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 
-
+/**
+ * Utility for service security purposes
+ */
 object SecurityUtils {
 
     /**

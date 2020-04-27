@@ -74,22 +74,4 @@ fun Route.registration(hashFunction: (String) -> String) {
             }
         }
     }
-
-    /**
-     * A PUT request to [ChangePassword] route, will try to change password for specified user
-     * @throws ValidationException if validation is not passed
-     */
-    put<ChangePassword> {
-        val userDao by kodein().instance<UserManagementDAO>()
-
-        val (userName, oldPassword, newPassword) = call.receive<PasswordChangeRequest>()
-
-        if (newPassword.length < 6) throw ValidationException("Password should be at least 6 characters long")
-
-        when (val user = userDao.find(userName, hashFunction(oldPassword))) {
-            null -> throw ValidationException("Credentials are wrong")
-            else -> userDao.updatePassword(user, hashFunction(newPassword))
-        }
-        call.respond(HttpStatusCode.OK, jsonMessage("Password was updated"))
-    }
 }

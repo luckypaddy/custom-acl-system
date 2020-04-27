@@ -49,8 +49,6 @@ import java.time.Instant
  * resources/application.conf file inside the ktor.application.modules.
  *
  */
-
-
 @InternalAPI
 @KtorExperimentalLocationsAPI
 @KtorExperimentalAPI
@@ -153,12 +151,8 @@ fun Application.main() {
         authenticate("custom-session-auth") {
 
             withRole("USER") {
+                changePassword(SecurityUtils::hash)
                 postNew()
-            }
-
-            withRole("ADMIN") {
-                assignRoles()
-                deleteFeed()
             }
 
             withRole("REVIEWER") {
@@ -166,6 +160,11 @@ fun Application.main() {
                 viewFeed()
                 editFeed()
                 publishFeed()
+            }
+
+            withRole("ADMIN") {
+                assignRoles()
+                deleteFeed()
             }
         }
     }

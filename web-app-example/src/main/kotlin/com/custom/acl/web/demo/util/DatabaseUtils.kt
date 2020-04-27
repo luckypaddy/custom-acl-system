@@ -10,11 +10,15 @@ import io.ktor.util.KtorExperimentalAPI
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 
+/**
+ * Create [HikariConfig] from Application configuration
+ *
+ * @return
+ */
 @KtorExperimentalAPI
 fun Application.hikariConfig(): HikariConfig {
     val config = HikariConfig()
 
-    //TODO rework it with reflection+delegation and application.environment.config.config("hikaricp")
     val dataSourceClassName = environment.config.propertyOrNull("hikaricp.dataSourceClassName")?.getString()
     if (!dataSourceClassName.isNullOrBlank()) config.dataSourceClassName = dataSourceClassName
 
@@ -44,10 +48,13 @@ fun Application.hikariConfig(): HikariConfig {
     return config
 }
 
-fun Database.checkAndInit(
-    adminName: String,
-    adminPwdHash: String
-) {
+/**
+ * Check if database structure and create default admin user if needed
+ *
+ * @param adminName
+ * @param adminPwdHash
+ */
+fun Database.checkAndInit(adminName: String, adminPwdHash: String) {
     transaction(this) {
         SchemaUtils.create(
             HierarchicalRoles,

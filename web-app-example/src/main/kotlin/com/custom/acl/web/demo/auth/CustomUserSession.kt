@@ -13,4 +13,8 @@ import io.ktor.auth.Principal
  */
 data class CustomUserSession(val userId: String, val timestamp: Long, val roles: Collection<String>)
 
+/**
+ * Transform [CustomUserSession] to [CustomUser] authentication principal
+ *
+ */
 fun CustomUserSession.toUser() = CustomUser(userId, roles.map(::Role))

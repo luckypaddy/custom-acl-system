@@ -11,6 +11,12 @@ interface PrincipalWithRoles : Principal {
     fun grantedRoles(): Collection<GrantedRole>
 }
 
+/**
+ * Basic user with roles
+ *
+ * @property username
+ * @property roles
+ */
 data class CustomUser(val username: String, val roles: Collection<GrantedRole>): PrincipalWithRoles {
     override fun grantedRoles(): Collection<GrantedRole> = roles
 }

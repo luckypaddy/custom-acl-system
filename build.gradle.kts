@@ -44,6 +44,9 @@ configure(subprojects) {
                 entry("junit-jupiter-api")
                 entry("junit-jupiter-engine")
             }
+
+            dependency("org.jsmart:zerocode-tdd-jupiter:1.3.18")
+            dependency("org.jsmart:zerocode-tdd:1.3.18")
             dependency("com.zaxxer:HikariCP:3.4.2")
             dependency("ch.qos.logback:logback-classic:1.2.3")
             dependency("com.natpryce:konfig:1.6.10.0")

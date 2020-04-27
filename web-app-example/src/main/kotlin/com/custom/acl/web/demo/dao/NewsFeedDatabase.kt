@@ -7,6 +7,11 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import java.net.URL
 import java.time.LocalDateTime
 
+/**
+ * Implementation of [NewsFeedDAO] to store news feed in database
+ *
+ * @property database
+ */
 class NewsFeedDatabase(private val database: Database) : NewsFeedDAO {
     override fun create(userId: String, title: String, content: String, source: URL, date: LocalDateTime): NewsFeed =
         transaction(database) {

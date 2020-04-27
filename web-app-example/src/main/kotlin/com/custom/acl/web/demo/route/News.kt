@@ -19,6 +19,10 @@ import org.kodein.di.generic.instance
 import org.kodein.di.ktor.kodein
 import kotlin.math.max
 
+/**
+ * Route for getting news feeds
+ *
+ */
 @KtorExperimentalLocationsAPI
 fun Route.newsFeed() {
     get<News.Feed> { feed ->
@@ -28,6 +32,10 @@ fun Route.newsFeed() {
     }
 }
 
+/**
+ * Route for posting news
+ *
+ */
 fun Route.postNew() {
     post<News.Post> {
         val session = call.sessions.get<CustomUserSession>()
@@ -42,6 +50,10 @@ fun Route.postNew() {
     }
 }
 
+/**
+ * Route for getting unpublished news
+ *
+ */
 fun Route.unpublishedFeeds() {
     get<News.Unpublished> { feed ->
         val newFeedDao by kodein().instance<NewsFeedDAO>()
@@ -50,6 +62,10 @@ fun Route.unpublishedFeeds() {
     }
 }
 
+/**
+ * Route to edit posted news
+ *
+ */
 fun Route.editFeed() {
     put<News.Id.Edit> { edit ->
         val id = edit.newsId.id
@@ -64,6 +80,10 @@ fun Route.editFeed() {
     }
 }
 
+/**
+ * Route to publish news
+ *
+ */
 fun Route.publishFeed() {
     post<News.Id.Publish> { edit ->
         val newFeedDao by kodein().instance<NewsFeedDAO>()
@@ -78,6 +98,10 @@ fun Route.publishFeed() {
     }
 }
 
+/**
+ * Route to delete news from feed
+ *
+ */
 fun Route.deleteFeed() {
     delete<News.Id.Delete> { delete ->
         val newFeedDao by kodein().instance<NewsFeedDAO>()
@@ -92,6 +116,10 @@ fun Route.deleteFeed() {
     }
 }
 
+/**
+ * Route to get single feed by its Id
+ *
+ */
 fun Route.viewFeed(){
     get<News.Id> {newsId ->
         val newFeedDao by kodein().instance<NewsFeedDAO>()
