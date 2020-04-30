@@ -29,10 +29,11 @@ tasks.withType<Test> {
     testLogging {
         showStandardStreams = true
     }
-    useJUnitPlatform() {
+    useJUnitPlatform {
+        exclude("**/ScenariosTest.class")
         systemProperty("zerocode.junit", "gen-smart-charts-csv-reports")
-        systemProperty("hostname", "http://localhost:8080")
-        systemProperty("admin_user", "Admin")
-        systemProperty("admin_password", "securedpwd")
+        systemProperty("hostname", project.properties["load.test.host"]!!.toString())
+        systemProperty("admin_user", project.properties["load.test.admin.user"]!!.toString())
+        systemProperty("admin_password", project.properties["load.test.admin.password"]!!.toString())
     }
 }

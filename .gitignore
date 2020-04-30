@@ -42,3 +42,6 @@ hs_err_pid*
 /.idea/
 /web-app-example/target/
 /web-app-test/target/
+/user-management/build/
+/web-app-example/build/
+/web-app-test/build/

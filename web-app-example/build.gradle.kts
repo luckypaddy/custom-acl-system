@@ -1,6 +1,10 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import org.apache.tools.ant.filters.ReplaceTokens
+
 plugins {
     kotlin("jvm")
     kotlin("plugin.serialization")
+    id("com.github.johnrengelman.shadow") version "5.2.0"
     application
 }
 
@@ -55,10 +59,43 @@ tasks.withType<Test> {
     testLogging {
         showStandardStreams = true
     }
-    useJUnitPlatform() {
-        systemProperty("zerocode.junit", "gen-smart-charts-csv-reports")
-        systemProperty("hostname", "http://localhost:8080")
-        systemProperty("admin_user", "Admin")
-        systemProperty("admin_password", "securedpwd")
+    useJUnitPlatform()
+}
+
+tasks.withType<ShadowJar> {
+    archiveClassifier.set("")
+    manifest {
+        attributes(
+            mapOf(
+                "Main-Class" to application.mainClassName
+            )
+        )
     }
+}
+
+tasks.getByName<ProcessResources>("processResources") {
+    val jar: Jar by tasks
+    val filterTokens = mapOf(
+        "postgres.user" to "postgres",
+        "postgres.password" to "pwdpwdpwd",
+        "postgres.db" to "acl",
+        "postgres.hostname" to "testpostgres", //serive name of postgres from docker-compose.yml file
+        "default.admin.name" to "Admin",
+        "default.admin.password" to "securedpwd",
+        "artifact.jar.name" to jar.archiveFileName.get(),
+        "name" to project.name,
+        "version" to project.version)
+    from("docker") {
+        filter<ReplaceTokens>("tokens" to filterTokens)
+    }
+    filter<ReplaceTokens>("tokens" to filterTokens)
+}
+
+tasks.register<Copy>("copyProcessedResources") {
+    include("*.jar", "*docker*","*Docker*")
+    from(
+        "$buildDir/resources/main/",
+        "$buildDir/libs"
+    )
+    into("$buildDir/artifacts")
 }

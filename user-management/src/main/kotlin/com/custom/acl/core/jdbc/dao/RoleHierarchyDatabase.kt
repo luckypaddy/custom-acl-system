@@ -6,7 +6,6 @@ import com.zaxxer.hikari.HikariDataSource
 import mu.KotlinLogging
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
-import org.jetbrains.exposed.sql.transactions.transactionManager
 import java.sql.Connection
 
 private val logger = KotlinLogging.logger {}
@@ -14,12 +13,12 @@ private val logger = KotlinLogging.logger {}
 /**
  * Implementation of role hierarchy persisted in database
  *
- * @property db
+ * @property database
  */
-class RoleHierarchyDatabase(private val db: Database = Database.connect(HikariDataSource())) :
+class RoleHierarchyDatabase(private val database: Database = Database.connect(HikariDataSource())) :
     RoleHierarchyDAO {
     override fun create(role: GrantedRole, parentRole: GrantedRole?) =
-        transaction(Connection.TRANSACTION_SERIALIZABLE, 3, db) {
+        transaction(Connection.TRANSACTION_SERIALIZABLE, 3, database) {
             val (newLeft, pId) = when {
                 parentRole != null -> {
                     val identity = parentRole.getRoleIdentity()
@@ -67,7 +66,7 @@ class RoleHierarchyDatabase(private val db: Database = Database.connect(HikariDa
             return@transaction Role(HierarchicalRole[entityID].identity)
         }
 
-    override fun delete(role: GrantedRole) = transaction(Connection.TRANSACTION_SERIALIZABLE, 3, db) {
+    override fun delete(role: GrantedRole) = transaction(Connection.TRANSACTION_SERIALIZABLE, 3, database) {
         val identity = role.getRoleIdentity()
         logger.info { "Searching for role with identity: $identity" }
         val node = HierarchicalRoles
@@ -104,7 +103,7 @@ class RoleHierarchyDatabase(private val db: Database = Database.connect(HikariDa
                 }
             }
             else -> {
-                logger.info { "Deleting hierarchy node without descendants" }
+                logger.info { "Deleting hierarchy node with descendants" }
                 HierarchicalRoles.deleteWhere { HierarchicalRoles.identity eq identity }
 
                 HierarchicalRoles.update({ HierarchicalRoles.left.between(newLeft, newRight) }) {
@@ -132,7 +131,7 @@ class RoleHierarchyDatabase(private val db: Database = Database.connect(HikariDa
         return@transaction
     }
 
-    override fun findByIdentity(identity: String): GrantedRole? = transaction(db) {
+    override fun findByIdentity(identity: String): GrantedRole? = transaction(database) {
         logger.info { "Searching for role with identity: $identity" }
         HierarchicalRole
             .find { HierarchicalRoles.identity eq identity }
@@ -159,7 +158,7 @@ class RoleHierarchyDatabase(private val db: Database = Database.connect(HikariDa
     }
 
     @Suppress("SENSELESS_NULL_IN_WHEN")
-    override fun hierarchy(): Map<GrantedRole, GrantedRole?> = transaction(db) {
+    override fun hierarchy(): Map<GrantedRole, GrantedRole?> = transaction(database) {
         logger.info { "Searching for role hierarchy" }
         val parent = HierarchicalRoles.alias("parent")
         return@transaction Join(HierarchicalRoles)
@@ -184,7 +183,7 @@ class RoleHierarchyDatabase(private val db: Database = Database.connect(HikariDa
     }
 
     @Suppress("SENSELESS_NULL_IN_WHEN")
-    override fun hierarchyWithDepth(): Map<GrantedRole, Pair<Long, GrantedRole?>> = transaction(db) {
+    override fun hierarchyWithDepth(): Map<GrantedRole, Pair<Long, GrantedRole?>> = transaction(database) {
         val node = HierarchicalRoles.alias("node")
         val parent = HierarchicalRoles.alias("parent")
         val count = Count(node[HierarchicalRoles.id])

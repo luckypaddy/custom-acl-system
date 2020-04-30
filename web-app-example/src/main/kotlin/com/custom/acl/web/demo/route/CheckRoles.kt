@@ -25,7 +25,7 @@ fun Route.withRole(role: String, build: Route.() -> Unit): Route = withAnyRole(l
 /**
 * Build route with check for any of specified roles, if there are no roles, access would be forbidden
 *
-* @param role role identity to be present in [PrincipalWithRoles]
+* @param roles role identity to be present in [PrincipalWithRoles]
 */
 @KtorExperimentalAPI
 fun Route.withAnyRole(roles: Collection<String>, build: Route.() -> Unit): Route {

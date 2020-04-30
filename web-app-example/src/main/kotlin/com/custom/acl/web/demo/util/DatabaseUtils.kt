@@ -18,32 +18,40 @@ import org.jetbrains.exposed.sql.transactions.transaction
 @KtorExperimentalAPI
 fun Application.hikariConfig(): HikariConfig {
     val config = HikariConfig()
+    val databaseConfig = environment.config.config("hikaricp")
 
-    val dataSourceClassName = environment.config.propertyOrNull("hikaricp.dataSourceClassName")?.getString()
-    if (!dataSourceClassName.isNullOrBlank()) config.dataSourceClassName = dataSourceClassName
+    val dataSourceClassName = databaseConfig.propertyOrNull("dataSourceClassName")?.getString()
+    if (!dataSourceClassName.isNullOrBlank()) {
+        config.dataSourceClassName = dataSourceClassName
+        config.addDataSourceProperty("databaseName",databaseConfig.property("database").getString())
+        config.addDataSourceProperty("portNumber",databaseConfig.property("port").getString().toInt())
+        config.addDataSourceProperty("serverName",databaseConfig.property("host").getString())
+    }
 
-    val driverClassName = environment.config.propertyOrNull("hikaricp.driverClassName")?.getString()
-    if (!driverClassName.isNullOrBlank()) config.driverClassName = driverClassName
+    val driverClassName = databaseConfig.propertyOrNull("driverClassName")?.getString()
+    if (!driverClassName.isNullOrBlank()) {
+        config.driverClassName = driverClassName
+        val jdbcUrl = databaseConfig.property("jdbcUrl").getString()
+        if (!jdbcUrl.isBlank()) config.jdbcUrl = jdbcUrl
+    }
 
-    val jdbcUrl = environment.config.propertyOrNull("hikaricp.jdbcUrl")?.getString()
-    if (!jdbcUrl.isNullOrBlank()) config.jdbcUrl = jdbcUrl
 
-    val username = environment.config.propertyOrNull("hikaricp.username")?.getString()
+    val username = databaseConfig.propertyOrNull("username")?.getString()
     if (!username.isNullOrBlank()) config.username = username
 
-    val password = environment.config.propertyOrNull("hikaricp.password")?.getString()
+    val password = databaseConfig.propertyOrNull("password")?.getString()
     if (!password.isNullOrBlank()) config.password = password
 
-    val schema = environment.config.propertyOrNull("hikaricp.schema")?.getString()
+    val schema = databaseConfig.propertyOrNull("schema")?.getString()
     if (!password.isNullOrBlank()) config.schema = schema
 
-    val transactionIsolation = environment.config.propertyOrNull("hikaricp.transactionIsolation")?.getString()
+    val transactionIsolation = databaseConfig.propertyOrNull("transactionIsolation")?.getString()
     if (!transactionIsolation.isNullOrBlank()) config.transactionIsolation = transactionIsolation
 
     config.isAutoCommit =
-        environment.config.propertyOrNull("hikaricp.isAutoCommit")?.getString()?.toBoolean() ?: true
+        databaseConfig.propertyOrNull("isAutoCommit")?.getString()?.toBoolean() ?: true
     config.maximumPoolSize =
-        environment.config.propertyOrNull("hikaricp.maximumPoolSize")?.getString()?.toInt() ?: 5
+        databaseConfig.propertyOrNull("maximumPoolSize")?.getString()?.toInt() ?: 5
 
     return config
 }

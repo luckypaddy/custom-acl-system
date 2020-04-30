@@ -44,7 +44,10 @@ import org.kodein.di.generic.singleton
 import org.kodein.di.ktor.kodein
 import java.time.Instant
 
-
+/**
+ * Main application with defined DI and session configuration
+ *
+ */
 @KtorExperimentalLocationsAPI
 @KtorExperimentalAPI
 fun Application.main() = demoApp(
@@ -88,6 +91,9 @@ fun Application.main() = demoApp(
 /**
  * Entry Point of the application. This function is referenced in the
  * resources/application.conf file inside the ktor.application.modules.
+ * Externalized Kodein and Session configurations give flexibility for
+ * different scenarios (e.g. override during tests)
+ * F
  *
  */
 @KtorExperimentalLocationsAPI
@@ -151,7 +157,6 @@ fun Application.demoApp(di: Kodein.MainBuilder.() -> Unit = {}, sessionConfig: S
         json()
     }
 
-// Registers routes
     routing {
         registration(SecurityUtils::hash)
         login(SecurityUtils::hash)
