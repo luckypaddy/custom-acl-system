@@ -3,7 +3,6 @@ package com.custom.acl.web.demo.route
 import com.custom.acl.core.jdbc.dao.UserManagementDAO
 import com.custom.acl.core.role.Role
 import com.custom.acl.web.demo.AssignRoles
-import com.custom.acl.web.demo.exception.ValidationException
 import com.custom.acl.web.demo.jsonMessage
 import com.custom.acl.web.demo.model.RolesAssignRequest
 import io.ktor.application.call
@@ -23,7 +22,7 @@ fun Route.assignRoles() {
         val (userName, roles) = call.receive<RolesAssignRequest>()
         val userDao by kodein().instance<UserManagementDAO>()
         when (userDao.assingRoles(userName, *roles.map(::Role).toTypedArray())) {
-            null -> throw ValidationException("User $userName not found")
+            null -> call.respond(HttpStatusCode.NotFound, jsonMessage("User $userName not found"))
             else -> call.respond(HttpStatusCode.OK, jsonMessage("User's roles were successfully updated"))
         }
     }

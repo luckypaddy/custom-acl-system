@@ -7,6 +7,7 @@ import com.custom.acl.web.demo.Login
 import com.custom.acl.web.demo.Logout
 import com.custom.acl.web.demo.model.UserCredentials
 import com.custom.acl.web.demo.auth.CustomUserSession
+import com.custom.acl.web.demo.jsonMessage
 import com.custom.acl.web.demo.util.userNameValid
 import io.ktor.application.call
 import io.ktor.http.HttpStatusCode
@@ -49,7 +50,7 @@ fun Route.login(hash: (String) -> String) {
         }
 
         if (login == null) {
-            call.respond(HttpStatusCode.BadRequest.description("Invalid username or password"))
+            call.respond(HttpStatusCode.BadRequest, jsonMessage("Invalid username or password"))
         } else {
             call.sessions.set(
                 CustomUserSession(

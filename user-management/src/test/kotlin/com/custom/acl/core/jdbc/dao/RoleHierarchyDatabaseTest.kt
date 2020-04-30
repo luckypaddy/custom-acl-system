@@ -2,6 +2,8 @@ package com.custom.acl.core.jdbc.dao
 
 import com.custom.acl.core.role.Role
 import org.jetbrains.exposed.sql.SortOrder
+import org.jetbrains.exposed.sql.Transaction
+import org.jetbrains.exposed.sql.insertAndGetId
 import org.jetbrains.exposed.sql.selectAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -16,10 +18,25 @@ internal class RoleHierarchyDatabaseTest : DatabaseTestsBase() {
         val ADMIN_ROLE = Role("ADMIN")
     }
 
-    private fun createBasicRoles() {
-        roleDao.create(USER_ROLE, null)
-        roleDao.create(REVIEWER_ROLE, USER_ROLE)
-        roleDao.create(ADMIN_ROLE, REVIEWER_ROLE)
+    private fun Transaction.createBasicRoles() {
+        val userId = HierarchicalRoles.insertAndGetId {
+            it[parentId] = null
+            it[identity] = "USER"
+            it[left] = 1
+            it[right] = 6
+        }
+        val reviewerId = HierarchicalRoles.insertAndGetId {
+            it[parentId] = userId.value
+            it[identity] = "REVIEWER"
+            it[left] = 2
+            it[right] = 5
+        }
+        HierarchicalRoles.insertAndGetId {
+            it[parentId] = reviewerId.value
+            it[identity] = "ADMIN"
+            it[left] = 3
+            it[right] = 4
+        }
     }
 
     @Test

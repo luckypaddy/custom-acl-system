@@ -5,11 +5,11 @@ import com.custom.acl.core.jdbc.dao.RoleHierarchyDatabase
 import com.custom.acl.core.jdbc.dao.UserManagementDAO
 import com.custom.acl.core.jdbc.dao.UserManagementDatabase
 import com.custom.acl.core.jdbc.utils.DatabaseFactory
-import com.custom.acl.web.demo.exception.ValidationException
 import com.custom.acl.web.demo.auth.CustomUserSession
 import com.custom.acl.web.demo.auth.toUser
 import com.custom.acl.web.demo.dao.NewsFeedDAO
 import com.custom.acl.web.demo.dao.NewsFeedDatabase
+import com.custom.acl.web.demo.exception.ValidationException
 import com.custom.acl.web.demo.route.*
 import com.custom.acl.web.demo.util.SecurityUtils
 import com.custom.acl.web.demo.util.SecurityUtils.hash
@@ -32,51 +32,31 @@ import io.ktor.response.respond
 import io.ktor.routing.routing
 import io.ktor.serialization.json
 import io.ktor.sessions.*
-import io.ktor.util.InternalAPI
 import io.ktor.util.KtorExperimentalAPI
 import io.ktor.util.hex
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.json
 import org.jetbrains.exposed.sql.Database
+import org.kodein.di.Kodein
 import org.kodein.di.generic.bind
 import org.kodein.di.generic.instance
 import org.kodein.di.generic.singleton
 import org.kodein.di.ktor.kodein
 import java.time.Instant
 
-/**
- * Entry Point of the application. This function is referenced in the
- * resources/application.conf file inside the ktor.application.modules.
- *
- */
-@InternalAPI
+
 @KtorExperimentalLocationsAPI
 @KtorExperimentalAPI
-fun Application.main() {
-
-    val adminConfig = environment.config.config("default.admin")
-    val defaultAdminName = adminConfig.property("name").getString()
-    val defaultAdminPassword = adminConfig.property("password").getString()
-
-    val sessionEncryptionConfig = environment.config.config("crypto.session")
-    val sessionEncryptionKey = hex(sessionEncryptionConfig.property("encryptionKey").getString())
-    val sessionSignKey = hex(sessionEncryptionConfig.property("signKey").getString())
-    val sessionIV = hex(sessionEncryptionConfig.property("iv").getString())
-
-    val sessionDuration = environment.config.propertyOrNull("default.session.duration")?.getString()?.toLong() ?: 5
-
-    // This adds automatically Date and Server headers to each response, and would allow you to configure
-    // additional headers served to each response.
-    install(DefaultHeaders)
-    // This uses use the logger to log every call (request/response)
-    install(CallLogging)
-
-    install(Locations)
-
-    kodein {
-        val db = DatabaseFactory.connectToDb(this@main.hikariConfig())
+fun Application.main() = demoApp(
+    di = {
+        val adminConfig = environment.config.config("default.admin")
+        val defaultAdminName = adminConfig.property("name").getString()
+        val defaultAdminPassword = adminConfig.property("password").getString()
+        val db = DatabaseFactory.connectToDb(hikariConfig())
         db.checkAndInit(defaultAdminName, hash(defaultAdminPassword))
+
         bind<Database>("mainDatabase") with singleton { db }
+
         bind<UserManagementDAO>() with singleton {
             UserManagementDatabase(instance("mainDatabase"))
         }
@@ -86,9 +66,14 @@ fun Application.main() {
         bind<NewsFeedDAO>() with singleton {
             NewsFeedDatabase(instance("mainDatabase"))
         }
-    }
 
-    install(Sessions) {
+
+    },
+    sessionConfig = {
+        val sessionEncryptionConfig = environment.config.config("crypto.session")
+        val sessionEncryptionKey = hex(sessionEncryptionConfig.property("encryptionKey").getString())
+        val sessionSignKey = hex(sessionEncryptionConfig.property("signKey").getString())
+        val sessionIV = hex(sessionEncryptionConfig.property("iv").getString())
         header<CustomUserSession>(name = "Custom-Auth-Key") {
             transform(
                 SessionTransportTransformerEncrypt(
@@ -98,6 +83,30 @@ fun Application.main() {
             )
         }
     }
+)
+
+/**
+ * Entry Point of the application. This function is referenced in the
+ * resources/application.conf file inside the ktor.application.modules.
+ *
+ */
+@KtorExperimentalLocationsAPI
+@KtorExperimentalAPI
+fun Application.demoApp(di: Kodein.MainBuilder.() -> Unit = {}, sessionConfig: Sessions.Configuration.() -> Unit = {}) {
+
+    val sessionDuration = environment.config.propertyOrNull("default.session.duration")?.getString()?.toLong() ?: 5
+
+    // This adds automatically Date and Server headers to each response, and would allow you to configure
+    // additional headers served to each response.
+    install(DefaultHeaders)
+    // This uses use the logger to log every call (request/response)
+    install(CallLogging)
+    // Location
+    install(Locations)
+    //DI
+    kodein(di)
+
+    install(Sessions, sessionConfig)
 
     install(StatusPages) {
         exception<SerializationException> { cause ->
@@ -117,7 +126,6 @@ fun Application.main() {
                 "Error during processing request call: ${call.request.httpMethod} ${call.request.uri}",
                 cause
             )
-            application.environment.log
             call.respond(
                 HttpStatusCode.InternalServerError,
                 jsonMessage("Something went wrong, please try again later or contact administrator")

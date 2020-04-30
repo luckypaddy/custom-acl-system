@@ -113,7 +113,7 @@
     {
       "name": "publish_news_feed",
       "url": "${SYSTEM.PROPERTY:hostname}/news/${$.post_news_feed.response.body.id}/publish",
-      "operation": "POST",
+      "operation": "PUT",
       "request": {
         "headers": {
           "Custom-Auth-Key": "${$.login_user.response.headers.Custom-Auth-Key[0]}"

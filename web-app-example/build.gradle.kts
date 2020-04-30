@@ -32,12 +32,9 @@ dependencies {
     runtimeOnly("com.h2database", "h2", "1.4.200")
     runtimeOnly("org.postgresql:postgresql")
 
+    testImplementation("io.mockk:mockk")
+    testImplementation("io.ktor:ktor-server-test-host")
     testImplementation("org.junit.jupiter:junit-jupiter-api")
-//    testImplementation("com.google.guava:guava:29.0-jre")
-//    testImplementation("com.google.code.gson:gson:2.8.6")
-
-    testImplementation("org.jsmart:zerocode-tdd-jupiter")
-    testImplementation("org.jsmart:zerocode-tdd")
     testImplementation("org.junit.jupiter:junit-jupiter-engine")
 }
 

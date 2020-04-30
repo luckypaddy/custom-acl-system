@@ -1,7 +1,7 @@
 package com.custom.acl.web.demo.dao
 
 import com.custom.acl.web.demo.model.NewsFeed
-import com.custom.acl.web.demo.model.entity.NewsFeeds
+import com.custom.acl.web.demo.model.database.NewsFeeds
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.net.URL

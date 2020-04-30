@@ -85,7 +85,7 @@ fun Route.editFeed() {
  *
  */
 fun Route.publishFeed() {
-    post<News.Id.Publish> { edit ->
+    put<News.Id.Publish> { edit ->
         val newFeedDao by kodein().instance<NewsFeedDAO>()
 
         val id = edit.newsId.id

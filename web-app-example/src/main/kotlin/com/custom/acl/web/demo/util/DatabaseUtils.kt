@@ -3,7 +3,7 @@ package com.custom.acl.web.demo.util
 import com.custom.acl.core.jdbc.dao.HierarchicalRoles
 import com.custom.acl.core.jdbc.dao.PersistedUsers
 import com.custom.acl.core.jdbc.dao.UserRoles
-import com.custom.acl.web.demo.model.entity.NewsFeeds
+import com.custom.acl.web.demo.model.database.NewsFeeds
 import com.zaxxer.hikari.HikariConfig
 import io.ktor.application.Application
 import io.ktor.util.KtorExperimentalAPI

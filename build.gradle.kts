@@ -29,6 +29,7 @@ configure(subprojects) {
                 entry("ktor-locations")
                 entry("ktor-server-sessions")
                 entry("ktor-serialization")
+                entry("ktor-server-test-host")
             }
             dependencySet("org.jetbrains.exposed:$exposedVersion") {
                 entry("exposed-core")
@@ -45,6 +46,8 @@ configure(subprojects) {
                 entry("junit-jupiter-engine")
             }
 
+            dependency("io.mockk:mockk:1.10.0")
+            dependency("io.ktor:ktor-server-test-host:1.3.1")
             dependency("org.jsmart:zerocode-tdd-jupiter:1.3.18")
             dependency("org.jsmart:zerocode-tdd:1.3.18")
             dependency("com.zaxxer:HikariCP:3.4.2")
