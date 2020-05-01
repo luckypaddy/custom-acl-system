@@ -64,7 +64,7 @@ paths:
               $ref: '#/components/schemas/UserCredentials'
       responses:
         '200':
-          description: user was created
+          description: user logged in
           headers:
             Custom-Auth-Key:
               schema:
@@ -186,7 +186,7 @@ paths:
           required: false
       responses:
         '200':
-          description: News feed by Id
+          description: Unpublished news
           content:
             application/json:
               schema:
@@ -269,7 +269,7 @@ paths:
               $ref: '#/components/schemas/NewsFeedRequest'
       responses:
         '200':
-          description: News feed posted
+          description: News feed is edited
           content:
             application/json:
               schema:

@@ -79,7 +79,7 @@ tasks.getByName<ProcessResources>("processResources") {
         "postgres.user" to "postgres",
         "postgres.password" to "pwdpwdpwd",
         "postgres.db" to "acl",
-        "postgres.hostname" to "testpostgres", //serive name of postgres from docker-compose.yml file
+        "postgres.hostname" to "testpostgres", //service name of postgres from docker-compose.yml file
         "default.admin.name" to "Admin",
         "default.admin.password" to "securedpwd",
         "artifact.jar.name" to jar.archiveFileName.get(),

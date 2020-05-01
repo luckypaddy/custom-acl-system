@@ -1,7 +1,7 @@
 # Web application example
 
 This is simple "News feed" application build with [Ktor](https://ktor.io) framework.
-Rest API documentation is present via OAS3 definition. It can be accessed via paths: '/' and '/index.html'  
+Rest API documentation is present via OAS3 definition(api.yaml file). It can be accessed via paths: '/' and '/index.html'  
 To run it there are options:
 ### Run with embedded H2 database via gradle
 To do it just run
