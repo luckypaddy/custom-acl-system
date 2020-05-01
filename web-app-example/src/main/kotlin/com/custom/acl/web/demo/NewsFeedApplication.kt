@@ -24,6 +24,7 @@ import io.ktor.features.ContentNegotiation
 import io.ktor.features.DefaultHeaders
 import io.ktor.features.StatusPages
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.content.*
 import io.ktor.locations.KtorExperimentalLocationsAPI
 import io.ktor.locations.Locations
 import io.ktor.request.httpMethod
@@ -158,6 +159,10 @@ fun Application.demoApp(di: Kodein.MainBuilder.() -> Unit = {}, sessionConfig: S
     }
 
     routing {
+        static {
+            resource("/","static/index.html")
+            resources("static")
+        }
         registration(SecurityUtils::hash)
         login(SecurityUtils::hash)
         newsFeed()

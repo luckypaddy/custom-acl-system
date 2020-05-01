@@ -4,20 +4,17 @@ import com.custom.acl.core.jdbc.dao.RoleHierarchyDAO
 import com.custom.acl.core.jdbc.dao.UserManagementDAO
 import com.custom.acl.core.role.GrantedRole
 import com.custom.acl.web.demo.Login
-import com.custom.acl.web.demo.Logout
-import com.custom.acl.web.demo.model.UserCredentials
 import com.custom.acl.web.demo.auth.CustomUserSession
 import com.custom.acl.web.demo.jsonMessage
+import com.custom.acl.web.demo.model.UserCredentials
 import com.custom.acl.web.demo.util.userNameValid
 import io.ktor.application.call
 import io.ktor.http.HttpStatusCode
 import io.ktor.locations.KtorExperimentalLocationsAPI
-import io.ktor.locations.get
 import io.ktor.locations.post
 import io.ktor.request.receive
 import io.ktor.response.respond
 import io.ktor.routing.Route
-import io.ktor.sessions.clear
 import io.ktor.sessions.sessions
 import io.ktor.sessions.set
 import org.kodein.di.generic.instance
@@ -25,7 +22,7 @@ import org.kodein.di.ktor.kodein
 import java.time.Instant
 
 /**
- * Registers the [Login] and [Logout] routes '/login' and '/logout'.
+ * Registers the [Login] route '/login'.
  */
 @KtorExperimentalLocationsAPI
 fun Route.login(hash: (String) -> String) {
@@ -62,11 +59,4 @@ fun Route.login(hash: (String) -> String) {
         }
     }
 
-    /**
-     * A GET request to the [Logout] page, removes the session
-     */
-    get<Logout> {
-        call.sessions.clear<CustomUserSession>()
-        call.respond(HttpStatusCode.NoContent)
-    }
 }

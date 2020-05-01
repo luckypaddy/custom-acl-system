@@ -1,0 +1,417 @@
+openapi: "3.0.3"
+info:
+  version: 1.0.0
+  title: News Feed Application
+  description: API for news feed app
+servers:
+  - url: / #local deployment
+paths:
+  '/register':
+    post:
+      description: Register new user
+      tags:
+        - User Management
+      operationId: register_user
+      requestBody:
+        description: register user request
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegistrationRequest'
+      responses:
+        '201':
+          description: user was created
+
+  '/change/password':
+    put:
+      tags:
+        - User Management
+      description: Change password for logged in user
+      operationId: change_password
+      parameters:
+        - in: header
+          name: Custom-Auth-Key
+          description: header for user session
+          schema:
+            type: string
+          required: true
+      requestBody:
+        description: register user request
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordChangeRequest'
+      responses:
+        '200':
+          description: Password was changed
+        '400':
+          description: Old password is incorrect or new password is invalid
+
+  '/login':
+    post:
+      description: User Login
+      tags:
+        - User Management
+      operationId: login_user
+      requestBody:
+        description: login user request
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCredentials'
+      responses:
+        '200':
+          description: user was created
+          headers:
+            Custom-Auth-Key:
+              schema:
+                type: string
+              description: User session
+
+  '/roles/assign':
+    post:
+      description: Assign roles to user
+      tags:
+        - Admin Only
+      operationId: assign_roles
+      parameters:
+        - in: header
+          name: Custom-Auth-Key
+          description: header for user session
+          schema:
+            type: string
+          required: true
+      requestBody:
+        description: assing roles request
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RolesAssignRequest'
+      responses:
+        '200':
+          description: user roles were assigned
+
+  '/news/feed':
+    get:
+      description: Get all published news
+      tags:
+        - News
+      operationId: get_published_news
+      parameters:
+        - in: query
+          name: page
+          description: page number
+          schema:
+            type: integer
+            minimum: 0
+          required: false
+        - in: query
+          name: count
+          description: page size
+          schema:
+            type: integer
+            minimum: 1
+          required: false
+      responses:
+        '200':
+          description: News feed by Id
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NewsFeed'
+
+
+  '/news/post':
+    post:
+      description: Post news
+      tags:
+        - News
+      operationId: post_news
+      parameters:
+        - in: header
+          name: Custom-Auth-Key
+          description: header for user session
+          schema:
+            type: string
+          required: true
+      requestBody:
+        description: post news request
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewsFeedRequest'
+      responses:
+        '201':
+          description: News feed posted
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NewsFeed'
+
+  '/news/unpublished':
+    get:
+      description: Get all not published news
+      tags:
+        - News Reviewer Operations
+      operationId: get_npublished_news
+      parameters:
+        - in: header
+          name: Custom-Auth-Key
+          description: header for user session
+          schema:
+            type: string
+          required: true
+        - in: query
+          name: page
+          description: page number
+          schema:
+            type: integer
+            minimum: 0
+          required: false
+        - in: query
+          name: count
+          description: page size
+          schema:
+            type: integer
+            minimum: 1
+          required: false
+      responses:
+        '200':
+          description: News feed by Id
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NewsFeed'
+
+  '/news/{news_id}':
+    get:
+      description: Get News feed by id
+      tags:
+        - News Reviewer Operations
+      operationId: get_news_by_id
+      parameters:
+        - name: news_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - in: header
+          name: Custom-Auth-Key
+          description: header for user session
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: News feed by Id
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NewsFeed'
+
+  '/news/{news_id}/publish':
+    put:
+      description: Publish News feed with id
+      tags:
+        - News Reviewer Operations
+      operationId: publish_news_by_id
+      parameters:
+        - name: news_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - in: header
+          name: Custom-Auth-Key
+          description: header for user session
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: News feed is published
+
+  '/news/{news_id}/edit':
+    put:
+      description: Edit News feed with id
+      tags:
+        - News Reviewer Operations
+      operationId: edit_news_by_id
+      parameters:
+        - name: news_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - in: header
+          name: Custom-Auth-Key
+          description: header for user session
+          schema:
+            type: string
+          required: true
+      requestBody:
+        description: post news request
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewsFeedRequest'
+      responses:
+        '200':
+          description: News feed posted
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NewsFeed'
+
+  '/news/{news_id}/delete':
+    delete:
+      description: Delete News feed by id
+      tags:
+        - News Admin Operations
+      operationId: delete_news_by_id
+      parameters:
+        - name: news_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - in: header
+          name: Custom-Auth-Key
+          description: header for user session
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: News feed is deleted
+components:
+  schemas:
+    UserCredentials:
+      type: object
+      description: Minimal user info
+      required:
+        - name
+        - password
+      properties:
+        name:
+          type: string
+          maxLength: 32
+          example: someUserName
+        password:
+          type: string
+          example: somePassword
+          format: password
+
+    RolesAssignRequest:
+      type: object
+      description: Minimal user info
+      required:
+        - userName
+        - roleIdentities
+      properties:
+        userName:
+          type: string
+          maxLength: 32
+          example: someUserName
+        roleIdentities:
+          type: array
+          items:
+            type: string
+          example: ["REVIEWER"]
+
+    RegistrationRequest:
+      type: object
+      description: Minimal user info
+      required:
+        - userName
+        - password
+      properties:
+        userName:
+          type: string
+          maxLength: 32
+          example: someUserName
+        password:
+          type: string
+          example: somePassword
+          format: password
+
+    PasswordChangeRequest:
+      type: object
+      description: Info for changing password
+      required:
+        - oldPassword
+        - newPassword
+      properties:
+        oldPassword:
+          type: string
+          example: oldUserPassword
+          format: password
+        newPassword:
+          type: string
+          example: newUserPassword
+          format: password
+
+    NewsFeedRequest:
+      type: object
+      description: News feed details
+      required:
+        - title
+        - content
+        - source
+      properties:
+        title:
+          type: string
+          maxLength: 125
+          example: title
+        content:
+          type: string
+          maxLength: 2200
+        source:
+          type: string
+          format: url
+
+    NewsFeed:
+      type: object
+      description: News feed details
+      required:
+        - id
+        - userId
+        - title
+        - content
+        - source
+        - updatedAt
+      properties:
+        id:
+          type: integer
+          example: 1
+        userId:
+          type: string
+          example: someUser
+          maxLength: 32
+        title:
+          type: string
+          maxLength: 125
+          example: title
+        content:
+          type: string
+          maxLength: 2200
+        source:
+          type: string
+          format: url
+        updatedAt:
+          type: string
+          format: date-time
