@@ -3,7 +3,7 @@ package com.custom.acl.web.demo
 import io.ktor.locations.Location
 
 @Location("/login")
-data class Login(val userName: String = "", val error: String = "")
+internal data class Login(val userName: String = "", val error: String = "")
 
 @Location("/register")
 data class Register(val userName: String = "", val error: String = "")

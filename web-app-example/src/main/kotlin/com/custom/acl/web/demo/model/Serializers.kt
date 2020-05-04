@@ -5,6 +5,9 @@ import java.net.URL
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
+/**
+ * Serializer for [LocalDateTime]
+ */
 @Serializer(forClass = LocalDateTime::class)
 object LocalDateTimeSerializer : KSerializer<LocalDateTime> {
 //    override val descriptor: SerialDescriptor =
@@ -19,7 +22,9 @@ object LocalDateTimeSerializer : KSerializer<LocalDateTime> {
     }
 }
 
-
+/**
+ * Serializer for [URL]
+ */
 @Serializer(forClass = URL::class)
 object URLSerializer : KSerializer<URL> {
     override fun deserialize(decoder: Decoder): URL {

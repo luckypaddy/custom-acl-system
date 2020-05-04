@@ -16,8 +16,15 @@ import org.kodein.di.generic.instance
 import org.kodein.di.ktor.kodein
 import java.net.URI
 
+/**
+ * Route for role assignment operation
+ *
+ */
 @KtorExperimentalLocationsAPI
 fun Route.assignRoles() {
+    /**
+     * PUT method for processing roles assignment
+     */
     put<AssignRoles> {
         val (userName, roles) = call.receive<RolesAssignRequest>()
         val userDao by kodein().instance<UserManagementDAO>()
