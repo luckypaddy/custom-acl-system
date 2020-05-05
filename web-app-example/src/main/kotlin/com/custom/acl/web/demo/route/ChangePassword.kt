@@ -15,6 +15,8 @@ import io.ktor.response.respond
 import io.ktor.routing.Route
 import io.ktor.sessions.get
 import io.ktor.sessions.sessions
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.json
 import org.kodein.di.generic.instance
 import org.kodein.di.ktor.kodein
@@ -37,14 +39,22 @@ fun Route.changePassword(hashFunction: (String) -> String) {
 
         val userDao by kodein().instance<UserManagementDAO>()
 
-        val ( oldPassword, newPassword) = call.receive<PasswordChangeRequest>()
+        val (oldPassword, newPassword) = call.receive<PasswordChangeRequest>()
 
         if (newPassword.length < 6) throw ValidationException("Password should be at least 6 characters long")
 
-        when (val user = userDao.find(session.userId, hashFunction(oldPassword))) {
-            null -> throw ValidationException("Credentials are wrong")
-            else -> userDao.updatePassword(user, hashFunction(newPassword))
+        val updatedUser = withContext(Dispatchers.Default) {
+            when (val user = userDao.find(session.userId, hashFunction(oldPassword))) {
+                null -> throw ValidationException("Credentials are wrong")
+                else -> userDao.updatePassword(user, hashFunction(newPassword))
+            }
         }
-        call.respond(HttpStatusCode.OK, jsonMessage("Password was updated"))
+
+        //check for situation when several parallel requests to change password for same user
+        when (updatedUser) {
+            null -> call.respond(HttpStatusCode.NotFound, jsonMessage("Credentials are wrong"))
+            else -> call.respond(HttpStatusCode.OK, jsonMessage("Password was updated"))
+
+        }
     }
 }

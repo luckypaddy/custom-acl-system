@@ -15,6 +15,8 @@ import io.ktor.response.respond
 import io.ktor.routing.Route
 import io.ktor.sessions.get
 import io.ktor.sessions.sessions
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.kodein.di.generic.instance
 import org.kodein.di.ktor.kodein
 import kotlin.math.max
@@ -27,7 +29,9 @@ import kotlin.math.max
 fun Route.newsFeed() {
     get<News.Feed> { feed ->
         val newFeedDao by kodein().instance<NewsFeedDAO>()
-        val latest = newFeedDao.latest(true, Page(size = feed.count, number = max(0, feed.page - 1)))
+        val latest = withContext(Dispatchers.Default) {
+            newFeedDao.latest(true, Page(size = feed.count, number = max(0, feed.page - 1)))
+        }
         call.respond(HttpStatusCode.OK, latest)
     }
 }
@@ -44,8 +48,9 @@ fun Route.postNew() {
         val (title, content, source) = call.receive<ProcessNewsFeedRequest>()
         val newFeedDao by kodein().instance<NewsFeedDAO>()
 
-        val newsFeed = newFeedDao.create(session.userId, title, content, source)
-
+        val newsFeed = withContext(Dispatchers.Default) {
+            newFeedDao.create(session.userId, title, content, source)
+        }
         call.respond(HttpStatusCode.Created, newsFeed)
     }
 }
@@ -57,7 +62,9 @@ fun Route.postNew() {
 fun Route.unpublishedFeeds() {
     get<News.Unpublished> { feed ->
         val newFeedDao by kodein().instance<NewsFeedDAO>()
-        val latest = newFeedDao.latest(false, Page(size = feed.count, number = max(0, feed.page - 1)))
+        val latest = withContext(Dispatchers.Default) {
+            newFeedDao.latest(false, Page(size = feed.count, number = max(0, feed.page - 1)))
+        }
         call.respond(HttpStatusCode.OK, latest)
     }
 }
@@ -72,7 +79,9 @@ fun Route.editFeed() {
         val (title, content, source) = call.receive<ProcessNewsFeedRequest>()
         val newFeedDao by kodein().instance<NewsFeedDAO>()
 
-        val isUpdated = newFeedDao.update(id, title, content, source)
+        val isUpdated = withContext(Dispatchers.Default) {
+            newFeedDao.update(id, title, content, source)
+        }
         when {
             isUpdated -> call.respond(HttpStatusCode.OK, jsonMessage("Feed with id $id is updated"))
             else -> call.respond(HttpStatusCode.NotFound, jsonMessage("News with id $id are not found"))
@@ -89,13 +98,15 @@ fun Route.publishFeed() {
         val newFeedDao by kodein().instance<NewsFeedDAO>()
 
         val id = edit.newsId.id
-        val isPublished = newFeedDao.publish(id)
-
+        val isPublished = withContext(Dispatchers.Default) {
+            newFeedDao.publish(id)
+        }
         when {
             isPublished -> call.respond(HttpStatusCode.OK, jsonMessage("Feed with id $id is published"))
             else -> call.respond(HttpStatusCode.NotFound, jsonMessage("News with id $id are not found"))
         }
     }
+
 }
 
 /**
@@ -107,7 +118,8 @@ fun Route.deleteFeed() {
         val newFeedDao by kodein().instance<NewsFeedDAO>()
         val id = delete.newsId.id
 
-        val isDeleted = newFeedDao.delete(id)
+
+        val isDeleted = withContext(Dispatchers.Default) { newFeedDao.delete(id) }
 
         when {
             isDeleted -> call.respond(HttpStatusCode.OK, jsonMessage("Feed with id $id is deleted"))
@@ -124,8 +136,9 @@ fun Route.viewFeed() {
     get<News.Id> { newsId ->
         val newFeedDao by kodein().instance<NewsFeedDAO>()
         val id = newsId.id
+        val feed = withContext(Dispatchers.Default) { newFeedDao.findById(id) }
 
-        when (val feed = newFeedDao.findById(id)) {
+        when (feed) {
             null -> call.respond(HttpStatusCode.NotFound, jsonMessage("News with id $id are not found"))
             else -> call.respond(HttpStatusCode.OK, feed)
         }

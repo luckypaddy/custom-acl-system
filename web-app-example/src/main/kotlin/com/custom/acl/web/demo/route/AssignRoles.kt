@@ -12,9 +12,10 @@ import io.ktor.locations.put
 import io.ktor.request.receive
 import io.ktor.response.respond
 import io.ktor.routing.Route
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.kodein.di.generic.instance
 import org.kodein.di.ktor.kodein
-import java.net.URI
 
 /**
  * Route for role assignment operation
@@ -26,9 +27,14 @@ fun Route.assignRoles() {
      * PUT method for processing roles assignment
      */
     put<AssignRoles> {
-        val (userName, roles) = call.receive<RolesAssignRequest>()
         val userDao by kodein().instance<UserManagementDAO>()
-        when (userDao.assingRoles(userName, *roles.map(::Role).toTypedArray())) {
+        val (userName, roles) = call.receive<RolesAssignRequest>()
+
+        val user = withContext(Dispatchers.Default) {
+            userDao.assingRoles(userName, *roles.map(::Role).toTypedArray())
+        }
+
+        when (user) {
             null -> call.respond(HttpStatusCode.NotFound, jsonMessage("User $userName not found"))
             else -> call.respond(HttpStatusCode.OK, jsonMessage("User's roles were successfully updated"))
         }
