@@ -219,6 +219,4 @@ class RoleHierarchyDatabase(private val database: Database = Database.connect(Hi
             }
     }
 
-    override fun close() {
-    }
 }

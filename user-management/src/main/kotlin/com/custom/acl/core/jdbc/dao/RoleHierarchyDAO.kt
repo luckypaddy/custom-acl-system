@@ -8,7 +8,7 @@ import java.io.Closeable
  * DAO Interface for roles with hierarchy
  *
  */
-interface RoleHierarchyDAO: RoleHierarchy, Closeable {
+interface RoleHierarchyDAO: RoleHierarchy {
     /**
      * Create ROLE with parent relation
      *

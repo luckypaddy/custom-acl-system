@@ -8,7 +8,7 @@ import java.io.Closeable
  * DAO interface for operations with users
  *
  */
-interface UserManagementDAO: Closeable {
+interface UserManagementDAO {
 
     /**
      * Assign set of roles to user

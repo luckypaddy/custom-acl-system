@@ -97,7 +97,4 @@ class UserManagementDatabase(
         return@transaction persistedUser.toUser()
     }
 
-    override fun close() {
-        db.connector().close()
-    }
 }
