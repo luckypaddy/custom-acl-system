@@ -19,10 +19,8 @@ import io.ktor.application.*
 import io.ktor.auth.Authentication
 import io.ktor.auth.authenticate
 import io.ktor.auth.session
-import io.ktor.features.CallLogging
-import io.ktor.features.ContentNegotiation
-import io.ktor.features.DefaultHeaders
-import io.ktor.features.StatusPages
+import io.ktor.features.*
+import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.*
 import io.ktor.locations.KtorExperimentalLocationsAPI
@@ -110,6 +108,19 @@ fun Application.demoApp(di: Kodein.MainBuilder.() -> Unit = {}, sessionConfig: S
     install(CallLogging)
     // Location
     install(Locations)
+    //CORS
+    install(CORS) {
+        // development only, for production can be externalized via configuration file
+        anyHost()
+
+        //for preflight requests
+        method(HttpMethod.Options)
+
+        method(HttpMethod.Get)
+        method(HttpMethod.Post)
+        method(HttpMethod.Put)
+        method(HttpMethod.Delete)
+    }
     //DI
     kodein(di)
 
